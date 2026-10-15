@@ -1,11 +1,18 @@
 import { describe, it, expect } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
 
-import { mount } from '@vue/test-utils'
 import App from '../App.vue'
+import router from '../router'
 
 describe('App', () => {
-  it('mounts renders properly', () => {
-    const wrapper = mount(App)
-    expect(wrapper.text()).toContain('You did it!')
+  it('renders the header and the home route', async () => {
+    router.push('/')
+    await router.isReady()
+
+    const wrapper = mount(App, { global: { plugins: [router] } })
+    await flushPromises()
+
+    expect(wrapper.find('.app-header').text()).toContain('Fênix')
+    expect(wrapper.text()).toContain('Fênix — Provas Online')
   })
 })
