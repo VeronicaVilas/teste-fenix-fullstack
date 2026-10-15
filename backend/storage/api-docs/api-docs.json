@@ -12,6 +12,68 @@
         }
     ],
     "paths": {
+        "/teachers/{teacher}/exams": {
+            "post": {
+                "tags": [
+                    "Exams (Professor)"
+                ],
+                "summary": "Cria uma prova com questões e alternativas",
+                "description": "A prova nasce como rascunho (draft). A posição de questões e alternativas segue a ordem dos arrays.",
+                "operationId": "createExam",
+                "parameters": [
+                    {
+                        "name": "teacher",
+                        "in": "path",
+                        "description": "Id do professor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreExamRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Prova criada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Prova criada com sucesso."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 201
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExamTeacher"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
+                    }
+                }
+            }
+        },
         "/up": {
             "get": {
                 "tags": [
@@ -203,6 +265,181 @@
                     }
                 },
                 "type": "object"
+            },
+            "OptionTeacher": {
+                "required": [
+                    "id",
+                    "position",
+                    "text",
+                    "is_correct"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "position": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "text": {
+                        "type": "string",
+                        "example": "Brasília"
+                    },
+                    "is_correct": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "QuestionTeacher": {
+                "required": [
+                    "id",
+                    "position",
+                    "statement",
+                    "options"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "position": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "statement": {
+                        "type": "string",
+                        "example": "Qual é a capital do Brasil?"
+                    },
+                    "options": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OptionTeacher"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ExamTeacher": {
+                "required": [
+                    "id",
+                    "title",
+                    "status",
+                    "questions"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Prova de Geografia"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Capitais e relevo",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "draft",
+                        "enum": [
+                            "draft",
+                            "published"
+                        ]
+                    },
+                    "published_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "questions_count": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "questions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/QuestionTeacher"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "StoreExamRequest": {
+                "required": [
+                    "title",
+                    "questions"
+                ],
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "example": "Prova de Geografia",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Capitais e relevo",
+                        "nullable": true,
+                        "maxLength": 2000
+                    },
+                    "questions": {
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "statement",
+                                "options"
+                            ],
+                            "properties": {
+                                "statement": {
+                                    "type": "string",
+                                    "example": "Qual é a capital do Brasil?",
+                                    "maxLength": 2000
+                                },
+                                "options": {
+                                    "description": "De 2 a 5 alternativas, exatamente uma com is_correct = true. A ordem do array define a posição.",
+                                    "type": "array",
+                                    "items": {
+                                        "required": [
+                                            "text",
+                                            "is_correct"
+                                        ],
+                                        "properties": {
+                                            "text": {
+                                                "type": "string",
+                                                "example": "Brasília",
+                                                "maxLength": 500
+                                            },
+                                            "is_correct": {
+                                                "type": "boolean",
+                                                "example": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "maxItems": 5,
+                                    "minItems": 2
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "maxItems": 100,
+                        "minItems": 1
+                    }
+                },
+                "type": "object"
             }
         },
         "responses": {
@@ -229,6 +466,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Exams (Professor)",
+            "description": "Exams (Professor)"
+        },
         {
             "name": "Health",
             "description": "Health"
