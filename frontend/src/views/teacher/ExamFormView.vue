@@ -59,12 +59,12 @@ async function submit() {
   message.value = ''
 
   try {
-    await createExam(session.userId, {
+    const exam = await createExam(session.userId, {
       title: form.title,
       description: form.description || null,
       questions: form.questions,
     })
-    router.push({ name: 'teacher-exams' })
+    router.push({ name: 'teacher-exam-detail', params: { id: exam.id } })
   } catch (failure) {
     errors.value = failure.errors
     message.value = failure.message

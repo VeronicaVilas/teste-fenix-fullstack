@@ -93,7 +93,7 @@ onMounted(() => load())
           <td>{{ exam.attempts_count }}</td>
           <td>{{ formatDate(exam.created_at) }}</td>
           <td class="exam-list__actions">
-            <button type="button" disabled title="Disponível em breve">Ver</button>
+            <RouterLink :to="{ name: 'teacher-exam-detail', params: { id: exam.id } }" class="button">Ver</RouterLink>
             <template v-if="exam.status === 'draft'">
               <button type="button" disabled title="Disponível em breve">Editar</button>
               <button type="button" disabled title="Disponível em breve">Publicar</button>

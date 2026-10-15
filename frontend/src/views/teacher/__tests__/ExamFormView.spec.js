@@ -55,7 +55,7 @@ describe('ExamFormView', () => {
     expect(wrapper.findAll('.question')).toHaveLength(1)
   })
 
-  it('sends the exam for the current teacher and returns to the list', async () => {
+  it('sends the exam for the current teacher and opens it', async () => {
     createExam.mockResolvedValue({ id: 10 })
     const { wrapper, router } = await mountForm()
 
@@ -76,7 +76,8 @@ describe('ExamFormView', () => {
         },
       ],
     })
-    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exams'))
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'))
+    expect(router.currentRoute.value.params.id).toBe('10')
   })
 
   it('shows API validation errors next to each field', async () => {

@@ -18,6 +18,13 @@ export const routes = [
     meta: { role: ROLES.TEACHER },
   },
   {
+    path: '/teacher/exams/:id(\\d+)',
+    name: 'teacher-exam-detail',
+    component: () => import('@/views/teacher/ExamDetailView.vue'),
+    props: true,
+    meta: { role: ROLES.TEACHER },
+  },
+  {
     path: '/student/exams',
     name: 'student-exams',
     component: () => import('@/views/student/StudentExamListView.vue'),
