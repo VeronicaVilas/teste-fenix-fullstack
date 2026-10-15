@@ -1,14 +1,20 @@
 <script setup>
-import { reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import AlertMessage from '@/components/AlertMessage.vue'
 import QuestionEditor from '@/components/QuestionEditor.vue'
-import { createExam } from '@/services/examService'
+import { createExam, getExam, updateExam } from '@/services/examService'
 import { useSessionStore } from '@/stores/session'
+
+const props = defineProps({
+  id: { type: String, default: null },
+})
 
 const router = useRouter()
 const session = useSessionStore()
+
+const isEditing = computed(() => props.id !== null)
 
 function newQuestion() {
   return {
@@ -29,6 +35,8 @@ const form = reactive({
 const errors = ref({})
 const message = ref('')
 const saving = ref(false)
+const loading = ref(false)
+const notFound = ref(false)
 
 function errorFor(key) {
   return errors.value[key]?.[0] ?? ''
@@ -53,37 +61,96 @@ function removeQuestion(index) {
   errors.value = {}
 }
 
+function goToDetail(examId) {
+  router.push({ name: 'teacher-exam-detail', params: { id: examId } })
+}
+
+function fillForm(exam) {
+  form.title = exam.title
+  form.description = exam.description ?? ''
+  form.questions = exam.questions.map((question) => ({
+    statement: question.statement,
+    options: question.options.map((option) => ({ text: option.text, is_correct: option.is_correct })),
+  }))
+}
+
+async function loadExam() {
+  loading.value = true
+
+  try {
+    const exam = await getExam(session.userId, props.id)
+
+    if (exam.status !== 'draft') {
+      router.replace({ name: 'teacher-exam-detail', params: { id: props.id } })
+      return
+    }
+
+    fillForm(exam)
+  } catch (failure) {
+    if (failure.status === 404) {
+      notFound.value = true
+    } else {
+      message.value = failure.message
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
 async function submit() {
   saving.value = true
   errors.value = {}
   message.value = ''
 
+  const payload = {
+    title: form.title,
+    description: form.description || null,
+    questions: form.questions,
+  }
+
   try {
-    const exam = await createExam(session.userId, {
-      title: form.title,
-      description: form.description || null,
-      questions: form.questions,
-    })
-    router.push({ name: 'teacher-exam-detail', params: { id: exam.id } })
+    const exam = isEditing.value
+      ? await updateExam(session.userId, props.id, payload)
+      : await createExam(session.userId, payload)
+    goToDetail(exam.id)
   } catch (failure) {
+    if (failure.status === 409) {
+      goToDetail(props.id)
+      return
+    }
     errors.value = failure.errors
     message.value = failure.message
   } finally {
     saving.value = false
   }
 }
+
+onMounted(() => {
+  if (isEditing.value) {
+    loadExam()
+  }
+})
 </script>
 
 <template>
   <section class="exam-form">
     <header class="exam-form__header">
-      <h1>Nova prova</h1>
-      <RouterLink :to="{ name: 'teacher-exams' }">Voltar</RouterLink>
+      <h1>{{ isEditing ? 'Editar prova' : 'Nova prova' }}</h1>
+      <RouterLink :to="isEditing ? { name: 'teacher-exam-detail', params: { id } } : { name: 'teacher-exams' }">
+        Voltar
+      </RouterLink>
     </header>
 
     <AlertMessage :message="message" />
 
-    <form novalidate @submit.prevent="submit">
+    <p v-if="loading" class="exam-form__state">Carregando prova...</p>
+
+    <div v-else-if="notFound" class="exam-form__state">
+      <p>Prova não encontrada.</p>
+      <RouterLink :to="{ name: 'teacher-exams' }">Ir para a lista de provas</RouterLink>
+    </div>
+
+    <form v-else novalidate @submit.prevent="submit">
       <label class="field">
         <span>Título</span>
         <input v-model="form.title" type="text" maxlength="255" placeholder="Ex.: Prova de Geografia" />
@@ -124,6 +191,12 @@ async function submit() {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.exam-form__state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-muted);
 }
 
 .field {

@@ -95,7 +95,7 @@ onMounted(() => load())
           <td class="exam-list__actions">
             <RouterLink :to="{ name: 'teacher-exam-detail', params: { id: exam.id } }" class="button">Ver</RouterLink>
             <template v-if="exam.status === 'draft'">
-              <button type="button" disabled title="Disponível em breve">Editar</button>
+              <RouterLink :to="{ name: 'teacher-exam-edit', params: { id: exam.id } }" class="button">Editar</RouterLink>
               <button type="button" disabled title="Disponível em breve">Publicar</button>
             </template>
             <button type="button" class="danger" disabled title="Disponível em breve">Excluir</button>

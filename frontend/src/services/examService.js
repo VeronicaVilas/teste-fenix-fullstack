@@ -13,3 +13,7 @@ export function getExam(teacherId, examId) {
 export function createExam(teacherId, payload) {
   return api.post(`/teachers/${teacherId}/exams`, payload)
 }
+
+export function updateExam(teacherId, examId, payload) {
+  return api.put(`/teachers/${teacherId}/exams/${examId}`, payload)
+}

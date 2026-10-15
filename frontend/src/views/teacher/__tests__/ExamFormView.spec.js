@@ -5,17 +5,17 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ExamFormView from '../ExamFormView.vue'
 import { routes } from '@/router'
-import { createExam } from '@/services/examService'
+import { createExam, getExam, updateExam } from '@/services/examService'
 import { ROLES, useSessionStore } from '@/stores/session'
 
-vi.mock('@/services/examService', () => ({ createExam: vi.fn() }))
+vi.mock('@/services/examService', () => ({ createExam: vi.fn(), getExam: vi.fn(), updateExam: vi.fn() }))
 
-async function mountForm() {
+async function mountForm(id = null) {
   const router = createRouter({ history: createMemoryHistory(), routes })
-  router.push('/teacher/exams/new')
+  router.push(id ? `/teacher/exams/${id}/edit` : '/teacher/exams/new')
   await router.isReady()
 
-  const wrapper = mount(ExamFormView, { global: { plugins: [router] } })
+  const wrapper = mount(ExamFormView, { props: id ? { id } : {}, global: { plugins: [router] } })
   await flushPromises()
 
   return { wrapper, router }
@@ -98,5 +98,98 @@ describe('ExamFormView', () => {
     expect(wrapper.text()).toContain('O título é obrigatório.')
     expect(wrapper.find('.question').text()).toContain('Cada questão deve ter exatamente uma alternativa correta.')
     expect(router.currentRoute.value.name).toBe('teacher-exam-create')
+  })
+
+  describe('edit mode', () => {
+    const draft = {
+      id: 10,
+      title: 'Prova de Geografia',
+      description: null,
+      status: 'draft',
+      questions: [
+        {
+          id: 20,
+          position: 1,
+          statement: 'Qual é a capital do Brasil?',
+          options: [
+            { id: 31, position: 1, text: 'São Paulo', is_correct: false },
+            { id: 32, position: 2, text: 'Brasília', is_correct: true },
+            { id: 33, position: 3, text: 'Recife', is_correct: false },
+          ],
+        },
+      ],
+    }
+
+    it('fills the form with the loaded exam', async () => {
+      getExam.mockResolvedValue(draft)
+
+      const { wrapper } = await mountForm('10')
+
+      expect(getExam).toHaveBeenCalledWith(1, '10')
+      expect(wrapper.find('h1').text()).toBe('Editar prova')
+      expect(wrapper.find('input[placeholder="Ex.: Prova de Geografia"]').element.value).toBe('Prova de Geografia')
+      expect(wrapper.find('.question textarea').element.value).toBe('Qual é a capital do Brasil?')
+      expect(wrapper.findAll('.option input[type="text"]').map((input) => input.element.value)).toEqual([
+        'São Paulo',
+        'Brasília',
+        'Recife',
+      ])
+      expect(wrapper.findAll('.option input[type="radio"]')[1].element.checked).toBe(true)
+    })
+
+    it('updates the exam and opens its detail', async () => {
+      getExam.mockResolvedValue(draft)
+      updateExam.mockResolvedValue({ ...draft, title: 'Prova revisada' })
+      const { wrapper, router } = await mountForm('10')
+
+      await wrapper.find('input[placeholder="Ex.: Prova de Geografia"]').setValue('Prova revisada')
+      await wrapper.find('form').trigger('submit')
+      await flushPromises()
+
+      expect(createExam).not.toHaveBeenCalled()
+      expect(updateExam).toHaveBeenCalledWith(1, '10', {
+        title: 'Prova revisada',
+        description: null,
+        questions: [
+          {
+            statement: 'Qual é a capital do Brasil?',
+            options: [
+              { text: 'São Paulo', is_correct: false },
+              { text: 'Brasília', is_correct: true },
+              { text: 'Recife', is_correct: false },
+            ],
+          },
+        ],
+      })
+      await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'))
+    })
+
+    it('redirects published exams to the detail page', async () => {
+      getExam.mockResolvedValue({ ...draft, status: 'published' })
+
+      const { router } = await mountForm('10')
+
+      await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'))
+    })
+
+    it('goes to the detail page when the exam was published meanwhile', async () => {
+      getExam.mockResolvedValue(draft)
+      updateExam.mockRejectedValue({ status: 409, message: 'Prova publicada não pode ser alterada.', errors: {} })
+      const { wrapper, router } = await mountForm('10')
+
+      await wrapper.find('form').trigger('submit')
+      await flushPromises()
+
+      await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'))
+    })
+
+    it('shows not found for unknown exams', async () => {
+      getExam.mockRejectedValue({ status: 404, message: 'Recurso não encontrado.', errors: {} })
+
+      const { wrapper } = await mountForm('99')
+
+      expect(wrapper.text()).toContain('Prova não encontrada.')
+      expect(wrapper.find('form').exists()).toBe(false)
+    })
   })
 })

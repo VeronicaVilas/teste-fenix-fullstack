@@ -69,7 +69,7 @@ onMounted(async () => {
 
         <div class="exam-detail__actions">
           <template v-if="isDraft">
-            <button type="button" disabled title="Disponível em breve">Editar</button>
+            <RouterLink :to="{ name: 'teacher-exam-edit', params: { id: exam.id } }" class="button">Editar</RouterLink>
             <button type="button" disabled title="Disponível em breve">Publicar</button>
           </template>
           <button type="button" class="danger" disabled title="Disponível em breve">Excluir</button>
@@ -196,13 +196,16 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-button {
+button,
+.button {
   padding: 0.4rem 0.8rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 6px;
   cursor: pointer;
   font: inherit;
+  color: inherit;
+  text-decoration: none;
 }
 
 button.danger {
