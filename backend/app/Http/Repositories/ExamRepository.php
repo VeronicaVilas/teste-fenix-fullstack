@@ -36,9 +36,14 @@ class ExamRepository implements ExamRepositoryInterface
         }
     }
 
+    public function findForTeacher(User $teacher, int $examId): Exam
+    {
+        return $teacher->exams()->findOrFail($examId);
+    }
+
     public function loadDetails(Exam $exam): Exam
     {
-        return $exam->load('questions.options')->loadCount('questions');
+        return $exam->load('questions.options')->loadCount(['questions', 'attempts']);
     }
 
     public function paginateByTeacher(User $teacher, ?ExamStatus $status, int $perPage): LengthAwarePaginator

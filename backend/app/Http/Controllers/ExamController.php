@@ -8,6 +8,7 @@ use App\Http\Requests\StoreExamRequest;
 use App\Http\Resources\ExamResource;
 use App\Http\Resources\ExamSummaryResource;
 use App\Http\Services\Exam\CreateExamService;
+use App\Http\Services\Exam\GetTeacherExamService;
 use App\Http\Services\Exam\ListTeacherExamsService;
 use App\Models\User;
 use App\Traits\HttpResponses;
@@ -35,6 +36,15 @@ class ExamController extends Controller
             'Prova criada com sucesso.',
             Response::HTTP_CREATED,
             new ExamResource($service->handle($teacher, $request->validated())),
+        );
+    }
+
+    public function show(User $teacher, int $exam, GetTeacherExamService $service): JsonResponse
+    {
+        return $this->response(
+            'Prova encontrada.',
+            Response::HTTP_OK,
+            new ExamResource($service->handle($teacher, $exam)),
         );
     }
 }

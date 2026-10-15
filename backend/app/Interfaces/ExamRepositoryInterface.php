@@ -13,6 +13,8 @@ interface ExamRepositoryInterface
 
     public function createQuestions(Exam $exam, array $questions): void;
 
+    public function findForTeacher(User $teacher, int $examId): Exam;
+
     public function loadDetails(Exam $exam): Exam;
 
     public function paginateByTeacher(User $teacher, ?ExamStatus $status, int $perPage): LengthAwarePaginator;
