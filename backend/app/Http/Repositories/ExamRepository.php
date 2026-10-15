@@ -41,6 +41,23 @@ class ExamRepository implements ExamRepositoryInterface
         return $teacher->exams()->findOrFail($examId);
     }
 
+    public function lockForUpdate(Exam $exam): Exam
+    {
+        return Exam::query()->lockForUpdate()->findOrFail($exam->id);
+    }
+
+    public function update(Exam $exam, array $data): Exam
+    {
+        $exam->update($data);
+
+        return $exam;
+    }
+
+    public function deleteQuestions(Exam $exam): void
+    {
+        $exam->questions()->delete();
+    }
+
     public function loadDetails(Exam $exam): Exam
     {
         return $exam->load('questions.options')->loadCount(['questions', 'attempts']);

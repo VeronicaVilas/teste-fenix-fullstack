@@ -15,6 +15,12 @@ interface ExamRepositoryInterface
 
     public function findForTeacher(User $teacher, int $examId): Exam;
 
+    public function lockForUpdate(Exam $exam): Exam;
+
+    public function update(Exam $exam, array $data): Exam;
+
+    public function deleteQuestions(Exam $exam): void;
+
     public function loadDetails(Exam $exam): Exam;
 
     public function paginateByTeacher(User $teacher, ?ExamStatus $status, int $perPage): LengthAwarePaginator;
