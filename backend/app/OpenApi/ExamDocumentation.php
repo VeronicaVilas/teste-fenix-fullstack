@@ -147,4 +147,37 @@ use OpenApi\Attributes as OA;
         ),
     ]
 )]
+#[OA\Patch(
+    path: '/teachers/{teacher}/exams/{exam}/publish',
+    operationId: 'publishExam',
+    summary: 'Publica uma prova em rascunho',
+    description: 'A prova fica disponível para todos os alunos e não pode mais ser editada. A publicação é irreversível.',
+    tags: ['Exams (Professor)'],
+    parameters: [
+        new OA\Parameter(name: 'teacher', description: 'Id do professor', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'exam', description: 'Id da prova', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+    ],
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: 'Prova publicada',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'message', type: 'string', example: 'Prova publicada com sucesso.'),
+                    new OA\Property(property: 'status', type: 'integer', example: 200),
+                    new OA\Property(property: 'data', ref: '#/components/schemas/ExamTeacher'),
+                ]
+            )
+        ),
+        new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        new OA\Response(
+            response: 409,
+            description: 'Prova já publicada',
+            content: new OA\JsonContent(
+                ref: '#/components/schemas/ErrorResponse',
+                example: ['message' => 'Prova publicada não pode ser alterada.', 'status' => 409, 'errors' => [], 'data' => []]
+            )
+        ),
+    ]
+)]
 final class ExamDocumentation {}

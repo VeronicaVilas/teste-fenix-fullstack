@@ -352,6 +352,80 @@
                 }
             }
         },
+        "/teachers/{teacher}/exams/{exam}/publish": {
+            "patch": {
+                "tags": [
+                    "Exams (Professor)"
+                ],
+                "summary": "Publica uma prova em rascunho",
+                "description": "A prova fica disponível para todos os alunos e não pode mais ser editada. A publicação é irreversível.",
+                "operationId": "publishExam",
+                "parameters": [
+                    {
+                        "name": "teacher",
+                        "in": "path",
+                        "description": "Id do professor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "exam",
+                        "in": "path",
+                        "description": "Id da prova",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Prova publicada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Prova publicada com sucesso."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExamTeacher"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "description": "Prova já publicada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "message": "Prova publicada não pode ser alterada.",
+                                    "status": 409,
+                                    "errors": [],
+                                    "data": []
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/up": {
             "get": {
                 "tags": [
