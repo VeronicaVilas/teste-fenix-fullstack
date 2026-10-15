@@ -298,6 +298,58 @@
                         "$ref": "#/components/responses/UnprocessableEntity"
                     }
                 }
+            },
+            "delete": {
+                "tags": [
+                    "Exams (Professor)"
+                ],
+                "summary": "Exclui uma prova",
+                "description": "Rascunhos e provas publicadas sem tentativas podem ser excluídos. Prova já respondida retorna 409 para preservar o histórico e o ranking.",
+                "operationId": "deleteExam",
+                "parameters": [
+                    {
+                        "name": "teacher",
+                        "in": "path",
+                        "description": "Id do professor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "exam",
+                        "in": "path",
+                        "description": "Id da prova",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Prova excluída"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "description": "Prova já respondida por alunos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "message": "Prova já respondida por alunos não pode ser excluída.",
+                                    "status": 409,
+                                    "errors": [],
+                                    "data": []
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/up": {

@@ -124,4 +124,27 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 422, ref: '#/components/responses/UnprocessableEntity'),
     ]
 )]
+#[OA\Delete(
+    path: '/teachers/{teacher}/exams/{exam}',
+    operationId: 'deleteExam',
+    summary: 'Exclui uma prova',
+    description: 'Rascunhos e provas publicadas sem tentativas podem ser excluídos. Prova já respondida retorna 409 para preservar o histórico e o ranking.',
+    tags: ['Exams (Professor)'],
+    parameters: [
+        new OA\Parameter(name: 'teacher', description: 'Id do professor', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'exam', description: 'Id da prova', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+    ],
+    responses: [
+        new OA\Response(response: 204, description: 'Prova excluída'),
+        new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        new OA\Response(
+            response: 409,
+            description: 'Prova já respondida por alunos',
+            content: new OA\JsonContent(
+                ref: '#/components/schemas/ErrorResponse',
+                example: ['message' => 'Prova já respondida por alunos não pode ser excluída.', 'status' => 409, 'errors' => [], 'data' => []]
+            )
+        ),
+    ]
+)]
 final class ExamDocumentation {}
