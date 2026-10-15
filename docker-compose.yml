@@ -19,8 +19,14 @@ services:
       DB_DATABASE: fenix_db
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
+      CACHE_STORE: redis
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - fenix-network
@@ -35,6 +41,8 @@ services:
     volumes:
       - ./frontend:/app
       - frontend-node-modules:/app/node_modules
+    environment:
+      API_PROXY_TARGET: http://backend:8000
     command: npm run dev -- --host 0.0.0.0
     networks:
       - fenix-network
@@ -59,6 +67,11 @@ services:
 
   redis:
     image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     networks:
       - fenix-network
 
