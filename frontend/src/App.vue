@@ -1,10 +1,24 @@
 <script setup>
-import { RouterView } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
+
+import { useSessionStore } from '@/stores/session'
+
+const router = useRouter()
+const session = useSessionStore()
+
+function switchAccess() {
+  session.leave()
+  router.push({ name: 'home' })
+}
 </script>
 
 <template>
   <header class="app-header">
     <strong>Fênix</strong>
+    <div v-if="session.role" class="app-header__session">
+      <span>Acessando como: {{ session.name }} ({{ session.roleLabel }})</span>
+      <button type="button" @click="switchAccess">Trocar acesso</button>
+    </div>
   </header>
   <main class="app-main">
     <RouterView />
@@ -41,6 +55,23 @@ body {
   padding: 0.75rem 1.5rem;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+}
+
+.app-header__session {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+  color: var(--color-muted);
+}
+
+.app-header__session button {
+  padding: 0.4rem 0.8rem;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
 }
 
 .app-main {
