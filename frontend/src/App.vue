@@ -1,5 +1,5 @@
 <script setup>
-import { RouterView, useRouter } from 'vue-router'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
 
 import { useSessionStore } from '@/stores/session'
 
@@ -15,6 +15,9 @@ function switchAccess() {
 <template>
   <header class="app-header">
     <strong>Fênix</strong>
+    <nav v-if="session.isTeacher" class="app-header__nav">
+      <RouterLink :to="{ name: 'teacher-exams' }">Provas</RouterLink>
+    </nav>
     <div v-if="session.role" class="app-header__session">
       <span>Acessando como: {{ session.name }} ({{ session.roleLabel }})</span>
       <button type="button" @click="switchAccess">Trocar acesso</button>
@@ -55,6 +58,21 @@ body {
   padding: 0.75rem 1.5rem;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+}
+
+.app-header__nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.app-header__nav a {
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.app-header__nav a.router-link-active {
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 .app-header__session {
