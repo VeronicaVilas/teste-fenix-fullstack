@@ -4,6 +4,34 @@ namespace App\OpenApi;
 
 use OpenApi\Attributes as OA;
 
+#[OA\Get(
+    path: '/teachers/{teacher}/exams',
+    operationId: 'listTeacherExams',
+    summary: 'Lista as provas do professor',
+    description: 'Paginado, mais recentes primeiro, com contagem de questões e tentativas.',
+    tags: ['Exams (Professor)'],
+    parameters: [
+        new OA\Parameter(name: 'teacher', description: 'Id do professor', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['draft', 'published'])),
+        new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1)),
+        new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10, maximum: 50, minimum: 1)),
+    ],
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: 'Provas listadas',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'message', type: 'string', example: 'Provas listadas com sucesso.'),
+                    new OA\Property(property: 'status', type: 'integer', example: 200),
+                    new OA\Property(property: 'data', ref: '#/components/schemas/PaginatedExamSummary'),
+                ]
+            )
+        ),
+        new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        new OA\Response(response: 422, ref: '#/components/responses/UnprocessableEntity'),
+    ]
+)]
 #[OA\Post(
     path: '/teachers/{teacher}/exams',
     operationId: 'createExam',

@@ -117,4 +117,35 @@ use OpenApi\Attributes as OA;
         ),
     ]
 )]
+#[OA\Schema(
+    schema: 'PaginationMeta',
+    required: ['current_page', 'last_page', 'per_page', 'total'],
+    properties: [
+        new OA\Property(property: 'current_page', type: 'integer', example: 1),
+        new OA\Property(property: 'last_page', type: 'integer', example: 1),
+        new OA\Property(property: 'per_page', type: 'integer', example: 10),
+        new OA\Property(property: 'total', type: 'integer', example: 1),
+    ]
+)]
+#[OA\Schema(
+    schema: 'ExamSummary',
+    required: ['id', 'title', 'status', 'questions_count', 'attempts_count'],
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'title', type: 'string', example: 'Prova de Geografia'),
+        new OA\Property(property: 'status', type: 'string', enum: ['draft', 'published'], example: 'draft'),
+        new OA\Property(property: 'published_at', type: 'string', format: 'date-time', nullable: true, example: null),
+        new OA\Property(property: 'questions_count', type: 'integer', example: 5),
+        new OA\Property(property: 'attempts_count', type: 'integer', example: 0),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'PaginatedExamSummary',
+    required: ['items', 'meta'],
+    properties: [
+        new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/ExamSummary')),
+        new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+    ]
+)]
 final class Schemas {}
