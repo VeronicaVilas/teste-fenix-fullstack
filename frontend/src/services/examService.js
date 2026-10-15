@@ -18,6 +18,10 @@ export function updateExam(teacherId, examId, payload) {
   return api.put(`/teachers/${teacherId}/exams/${examId}`, payload)
 }
 
+export function publishExam(teacherId, examId) {
+  return api.patch(`/teachers/${teacherId}/exams/${examId}/publish`)
+}
+
 export function deleteExam(teacherId, examId) {
   return api.delete(`/teachers/${teacherId}/exams/${examId}`)
 }

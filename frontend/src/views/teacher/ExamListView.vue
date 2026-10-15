@@ -6,7 +6,7 @@ import AlertMessage from '@/components/AlertMessage.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
-import { deleteExam, listExams } from '@/services/examService'
+import { deleteExam, listExams, publishExam } from '@/services/examService'
 import { useSessionStore } from '@/stores/session'
 
 const route = useRoute()
@@ -26,6 +26,8 @@ const error = ref('')
 const success = ref(route.query.deleted ? 'Prova excluída.' : '')
 const examToDelete = ref(null)
 const deleting = ref(false)
+const examToPublish = ref(null)
+const publishing = ref(false)
 
 async function load(page = 1) {
   loading.value = true
@@ -39,6 +41,25 @@ async function load(page = 1) {
     error.value = failure.message
   } finally {
     loading.value = false
+  }
+}
+
+async function confirmPublish() {
+  publishing.value = true
+  error.value = ''
+  success.value = ''
+
+  try {
+    const published = await publishExam(session.userId, examToPublish.value.id)
+    const exam = exams.value.find((item) => item.id === published.id)
+    exam.status = published.status
+    exam.published_at = published.published_at
+    success.value = 'Prova publicada.'
+  } catch (failure) {
+    error.value = failure.message
+  } finally {
+    publishing.value = false
+    examToPublish.value = null
   }
 }
 
@@ -120,7 +141,7 @@ onMounted(() => load())
             <RouterLink :to="{ name: 'teacher-exam-detail', params: { id: exam.id } }" class="button">Ver</RouterLink>
             <template v-if="exam.status === 'draft'">
               <RouterLink :to="{ name: 'teacher-exam-edit', params: { id: exam.id } }" class="button">Editar</RouterLink>
-              <button type="button" disabled title="Disponível em breve">Publicar</button>
+              <button type="button" @click="examToPublish = exam">Publicar</button>
             </template>
             <button
               type="button"
@@ -137,6 +158,16 @@ onMounted(() => load())
     </table>
 
     <PaginationBar :meta="meta" :disabled="loading" @change="load" />
+
+    <ConfirmDialog
+      :open="examToPublish !== null"
+      title="Publicar prova"
+      :message="`Publicar a prova '${examToPublish?.title}'? Depois de publicada ela ficará disponível para os alunos e não poderá mais ser editada.`"
+      confirm-label="Publicar"
+      :processing="publishing"
+      @confirm="confirmPublish"
+      @cancel="examToPublish = null"
+    />
 
     <ConfirmDialog
       :open="examToDelete !== null"

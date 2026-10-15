@@ -5,10 +5,10 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ExamListView from '../ExamListView.vue'
 import { routes } from '@/router'
-import { deleteExam, listExams } from '@/services/examService'
+import { deleteExam, listExams, publishExam } from '@/services/examService'
 import { ROLES, useSessionStore } from '@/stores/session'
 
-vi.mock('@/services/examService', () => ({ listExams: vi.fn(), deleteExam: vi.fn() }))
+vi.mock('@/services/examService', () => ({ listExams: vi.fn(), deleteExam: vi.fn(), publishExam: vi.fn() }))
 
 const draft = {
   id: 2,
@@ -31,7 +31,10 @@ const published = {
 }
 
 function page(items, meta = {}) {
-  return { items, meta: { current_page: 1, last_page: 1, per_page: 10, total: items.length, ...meta } }
+  return {
+    items: items.map((item) => ({ ...item })),
+    meta: { current_page: 1, last_page: 1, per_page: 10, total: items.length, ...meta },
+  }
 }
 
 async function mountList(path = '/teacher/exams') {
@@ -189,5 +192,38 @@ describe('ExamListView', () => {
     const wrapper = await mountList('/teacher/exams?deleted=1')
 
     expect(wrapper.text()).toContain('Prova excluída.')
+  })
+
+  it('publishes a draft after confirmation and updates the row', async () => {
+    listExams.mockResolvedValue(page([draft]))
+    publishExam.mockResolvedValue({ ...draft, status: 'published', published_at: '2026-10-15T14:00:00+00:00' })
+    const wrapper = await mountList()
+
+    const publishButton = wrapper.findAll('tbody tr button').find((button) => button.text() === 'Publicar')
+    await publishButton.trigger('click')
+    expect(wrapper.find('[role="dialog"]').text()).toContain('não poderá mais ser editada')
+    expect(publishExam).not.toHaveBeenCalled()
+
+    await wrapper.find('.dialog__confirm').trigger('click')
+    await flushPromises()
+
+    const row = wrapper.find('tbody tr')
+    expect(publishExam).toHaveBeenCalledWith(1, 2)
+    expect(row.text()).toContain('Publicada')
+    expect(row.text()).not.toContain('Editar')
+    expect(row.text()).not.toContain('Publicar')
+    expect(wrapper.text()).toContain('Prova publicada.')
+  })
+
+  it('shows the API error when publishing fails', async () => {
+    listExams.mockResolvedValue(page([draft]))
+    publishExam.mockRejectedValue({ status: 409, message: 'Prova publicada não pode ser alterada.', errors: {} })
+    const wrapper = await mountList()
+
+    await wrapper.findAll('tbody tr button').find((button) => button.text() === 'Publicar').trigger('click')
+    await wrapper.find('.dialog__confirm').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Prova publicada não pode ser alterada.')
   })
 })

@@ -5,7 +5,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import AlertMessage from '@/components/AlertMessage.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
-import { deleteExam, getExam } from '@/services/examService'
+import { deleteExam, getExam, publishExam } from '@/services/examService'
 import { useSessionStore } from '@/stores/session'
 
 const props = defineProps({
@@ -21,10 +21,28 @@ const notFound = ref(false)
 const error = ref('')
 const confirmingDelete = ref(false)
 const deleting = ref(false)
+const confirmingPublish = ref(false)
+const publishing = ref(false)
+const success = ref('')
 
 const letters = 'ABCDE'
 
 const isDraft = computed(() => exam.value?.status === 'draft')
+
+async function confirmPublish() {
+  publishing.value = true
+  error.value = ''
+
+  try {
+    exam.value = await publishExam(session.userId, props.id)
+    success.value = 'Prova publicada.'
+  } catch (failure) {
+    error.value = failure.message
+  } finally {
+    publishing.value = false
+    confirmingPublish.value = false
+  }
+}
 
 async function confirmDelete() {
   deleting.value = true
@@ -75,6 +93,7 @@ onMounted(async () => {
 
     <template v-if="exam">
       <AlertMessage :message="error" />
+      <AlertMessage :message="success" type="success" />
 
       <header class="exam-detail__header">
         <div>
@@ -91,7 +110,7 @@ onMounted(async () => {
         <div class="exam-detail__actions">
           <template v-if="isDraft">
             <RouterLink :to="{ name: 'teacher-exam-edit', params: { id: exam.id } }" class="button">Editar</RouterLink>
-            <button type="button" disabled title="Disponível em breve">Publicar</button>
+            <button type="button" @click="confirmingPublish = true">Publicar</button>
           </template>
           <button
             type="button"
@@ -129,6 +148,16 @@ onMounted(async () => {
         </li>
       </ol>
     </template>
+
+    <ConfirmDialog
+      :open="confirmingPublish"
+      title="Publicar prova"
+      :message="`Publicar a prova '${exam?.title}'? Depois de publicada ela ficará disponível para os alunos e não poderá mais ser editada.`"
+      confirm-label="Publicar"
+      :processing="publishing"
+      @confirm="confirmPublish"
+      @cancel="confirmingPublish = false"
+    />
 
     <ConfirmDialog
       :open="confirmingDelete"

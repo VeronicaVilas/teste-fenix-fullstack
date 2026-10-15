@@ -5,10 +5,10 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ExamDetailView from '../ExamDetailView.vue'
 import { routes } from '@/router'
-import { deleteExam, getExam } from '@/services/examService'
+import { deleteExam, getExam, publishExam } from '@/services/examService'
 import { ROLES, useSessionStore } from '@/stores/session'
 
-vi.mock('@/services/examService', () => ({ getExam: vi.fn(), deleteExam: vi.fn() }))
+vi.mock('@/services/examService', () => ({ getExam: vi.fn(), deleteExam: vi.fn(), publishExam: vi.fn() }))
 
 function exam(overrides = {}) {
   return {
@@ -143,5 +143,23 @@ describe('ExamDetailView', () => {
 
     expect(wrapper.text()).toContain('Prova já respondida por alunos não pode ser excluída.')
     expect(wrapper.find('h1').text()).toBe('Prova de Geografia')
+  })
+
+  it('publishes after confirmation and freezes the exam', async () => {
+    getExam.mockResolvedValue(exam())
+    publishExam.mockResolvedValue(exam({ status: 'published', published_at: '2026-10-15T14:00:00+00:00' }))
+    const wrapper = await mountDetail()
+
+    const publishButton = wrapper.findAll('.exam-detail__actions button').find((button) => button.text() === 'Publicar')
+    await publishButton.trigger('click')
+    await wrapper.find('.dialog__confirm').trigger('click')
+    await flushPromises()
+
+    expect(publishExam).toHaveBeenCalledWith(1, '10')
+    expect(wrapper.text()).toContain('Prova publicada.')
+    expect(wrapper.text()).toContain('Publicada')
+    expect(wrapper.text()).toContain('Prova publicada: não pode mais ser editada.')
+    expect(wrapper.find('.exam-detail__actions').text()).not.toContain('Editar')
+    expect(wrapper.find('.exam-detail__actions').text()).not.toContain('Publicar')
   })
 })
