@@ -3,7 +3,10 @@
 namespace Tests\Unit;
 
 use App\Enums\UserRole;
+use App\Models\Attempt;
+use App\Models\Exam;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -101,6 +104,24 @@ class UserTest extends TestCase
         $this->assertArrayNotHasKey('password', $serialized);
         $this->assertArrayNotHasKey('remember_token', $serialized);
         $this->assertEquals('student', $serialized['role']);
+    }
+
+    public function test_teacher_exams_relation(): void
+    {
+        $relation = (new User)->exams();
+
+        $this->assertInstanceOf(HasMany::class, $relation);
+        $this->assertInstanceOf(Exam::class, $relation->getRelated());
+        $this->assertSame('teacher_id', $relation->getForeignKeyName());
+    }
+
+    public function test_student_attempts_relation(): void
+    {
+        $relation = (new User)->attempts();
+
+        $this->assertInstanceOf(HasMany::class, $relation);
+        $this->assertInstanceOf(Attempt::class, $relation->getRelated());
+        $this->assertSame('student_id', $relation->getForeignKeyName());
     }
 
     public function test_factory_creates_teacher_and_student_without_database(): void
