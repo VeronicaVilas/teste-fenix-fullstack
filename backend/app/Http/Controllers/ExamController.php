@@ -12,6 +12,7 @@ use App\Http\Services\Exam\CreateExamService;
 use App\Http\Services\Exam\DeleteExamService;
 use App\Http\Services\Exam\GetTeacherExamService;
 use App\Http\Services\Exam\ListTeacherExamsService;
+use App\Http\Services\Exam\PublishExamService;
 use App\Http\Services\Exam\UpdateExamService;
 use App\Models\User;
 use App\Traits\HttpResponses;
@@ -57,6 +58,15 @@ class ExamController extends Controller
             'Prova atualizada com sucesso.',
             Response::HTTP_OK,
             new ExamResource($service->handle($teacher, $exam, $request->validated())),
+        );
+    }
+
+    public function publish(User $teacher, int $exam, PublishExamService $service): JsonResponse
+    {
+        return $this->response(
+            'Prova publicada com sucesso.',
+            Response::HTTP_OK,
+            new ExamResource($service->handle($teacher, $exam)),
         );
     }
 

@@ -58,6 +58,16 @@ class ExamRepository implements ExamRepositoryInterface
         $exam->questions()->delete();
     }
 
+    public function publish(Exam $exam): Exam
+    {
+        $exam->update([
+            'status' => ExamStatus::Published,
+            'published_at' => now(),
+        ]);
+
+        return $exam;
+    }
+
     public function hasAttempts(Exam $exam): bool
     {
         return $exam->attempts()->exists();
