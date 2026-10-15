@@ -18,4 +18,5 @@ Route::prefix('teachers/{teacher}')->group(function () {
     Route::post('exams', [ExamController::class, 'store']);
     Route::get('exams/{exam}', [ExamController::class, 'show'])->whereNumber('exam');
     Route::put('exams/{exam}', [ExamController::class, 'update'])->whereNumber('exam');
+    Route::delete('exams/{exam}', [ExamController::class, 'destroy'])->whereNumber('exam');
 });

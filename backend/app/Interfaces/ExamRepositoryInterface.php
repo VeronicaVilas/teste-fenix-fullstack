@@ -21,6 +21,10 @@ interface ExamRepositoryInterface
 
     public function deleteQuestions(Exam $exam): void;
 
+    public function hasAttempts(Exam $exam): bool;
+
+    public function delete(Exam $exam): void;
+
     public function loadDetails(Exam $exam): Exam;
 
     public function paginateByTeacher(User $teacher, ?ExamStatus $status, int $perPage): LengthAwarePaginator;

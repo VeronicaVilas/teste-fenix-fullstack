@@ -58,6 +58,16 @@ class ExamRepository implements ExamRepositoryInterface
         $exam->questions()->delete();
     }
 
+    public function hasAttempts(Exam $exam): bool
+    {
+        return $exam->attempts()->exists();
+    }
+
+    public function delete(Exam $exam): void
+    {
+        $exam->delete();
+    }
+
     public function loadDetails(Exam $exam): Exam
     {
         return $exam->load('questions.options')->loadCount(['questions', 'attempts']);

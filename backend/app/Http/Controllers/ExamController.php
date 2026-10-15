@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateExamRequest;
 use App\Http\Resources\ExamResource;
 use App\Http\Resources\ExamSummaryResource;
 use App\Http\Services\Exam\CreateExamService;
+use App\Http\Services\Exam\DeleteExamService;
 use App\Http\Services\Exam\GetTeacherExamService;
 use App\Http\Services\Exam\ListTeacherExamsService;
 use App\Http\Services\Exam\UpdateExamService;
@@ -57,5 +58,12 @@ class ExamController extends Controller
             Response::HTTP_OK,
             new ExamResource($service->handle($teacher, $exam, $request->validated())),
         );
+    }
+
+    public function destroy(User $teacher, int $exam, DeleteExamService $service): JsonResponse
+    {
+        $service->handle($teacher, $exam);
+
+        return $this->response('', Response::HTTP_NO_CONTENT);
     }
 }
