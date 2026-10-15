@@ -2,8 +2,11 @@
 
 namespace App\Http\Repositories;
 
+use App\Enums\ExamStatus;
 use App\Interfaces\ExamRepositoryInterface;
 use App\Models\Exam;
+use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ExamRepository implements ExamRepositoryInterface
 {
@@ -36,5 +39,15 @@ class ExamRepository implements ExamRepositoryInterface
     public function loadDetails(Exam $exam): Exam
     {
         return $exam->load('questions.options')->loadCount('questions');
+    }
+
+    public function paginateByTeacher(User $teacher, ?ExamStatus $status, int $perPage): LengthAwarePaginator
+    {
+        return $teacher->exams()
+            ->withCount(['questions', 'attempts'])
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->latest()
+            ->latest('id')
+            ->paginate($perPage);
     }
 }

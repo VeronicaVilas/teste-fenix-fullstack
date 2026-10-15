@@ -14,5 +14,6 @@ Route::get('teachers', [TeacherController::class, 'index']);
 Route::get('students', [StudentController::class, 'index']);
 
 Route::prefix('teachers/{teacher}')->group(function () {
+    Route::get('exams', [ExamController::class, 'index']);
     Route::post('exams', [ExamController::class, 'store']);
 });
