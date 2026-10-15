@@ -12,6 +12,12 @@ export const routes = [
     meta: { role: ROLES.TEACHER },
   },
   {
+    path: '/teacher/exams/new',
+    name: 'teacher-exam-create',
+    component: () => import('@/views/teacher/ExamFormView.vue'),
+    meta: { role: ROLES.TEACHER },
+  },
+  {
     path: '/student/exams',
     name: 'student-exams',
     component: () => import('@/views/student/StudentExamListView.vue'),
