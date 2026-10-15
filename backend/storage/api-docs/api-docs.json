@@ -5,14 +5,42 @@
         "description": "API para gerenciamento de provas online.",
         "version": "1.0.0"
     },
+    "servers": [
+        {
+            "url": "/api/v1",
+            "description": "Fênix API v1"
+        }
+    ],
     "paths": {
         "/up": {
-            "servers": [
-                {
-                    "url": "/api/v1",
-                    "description": "Servidor Principal da API"
-                }
-            ]
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Verifica se a aplicação está no ar",
+                "description": "Rota de health check nativa do Laravel, servida fora do prefixo /api/v1.",
+                "operationId": "healthCheck",
+                "responses": {
+                    "200": {
+                        "description": "Aplicação disponível"
+                    },
+                    "500": {
+                        "description": "Falha ao inicializar a aplicação"
+                    }
+                },
+                "servers": [
+                    {
+                        "url": "/",
+                        "description": "Raiz da aplicação"
+                    }
+                ]
+            }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Health",
+            "description": "Health"
+        }
+    ]
 }

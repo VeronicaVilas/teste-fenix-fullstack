@@ -11,10 +11,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Server(
     url: '/api/v1',
-    description: 'Servidor Principal da API'
-)]
-#[OA\PathItem(
-    path: '/up'
+    description: 'Fênix API v1'
 )]
 abstract class Controller
 {
