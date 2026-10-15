@@ -86,4 +86,42 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
     ]
 )]
+#[OA\Put(
+    path: '/teachers/{teacher}/exams/{exam}',
+    operationId: 'updateExam',
+    summary: 'Atualiza uma prova em rascunho',
+    description: 'Substitui título, descrição e todas as questões. Só rascunhos podem ser editados.',
+    tags: ['Exams (Professor)'],
+    parameters: [
+        new OA\Parameter(name: 'teacher', description: 'Id do professor', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'exam', description: 'Id da prova', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+    ],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(ref: '#/components/schemas/StoreExamRequest')
+    ),
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: 'Prova atualizada',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'message', type: 'string', example: 'Prova atualizada com sucesso.'),
+                    new OA\Property(property: 'status', type: 'integer', example: 200),
+                    new OA\Property(property: 'data', ref: '#/components/schemas/ExamTeacher'),
+                ]
+            )
+        ),
+        new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        new OA\Response(
+            response: 409,
+            description: 'Prova publicada não pode ser alterada',
+            content: new OA\JsonContent(
+                ref: '#/components/schemas/ErrorResponse',
+                example: ['message' => 'Prova publicada não pode ser alterada.', 'status' => 409, 'errors' => [], 'data' => []]
+            )
+        ),
+        new OA\Response(response: 422, ref: '#/components/responses/UnprocessableEntity'),
+    ]
+)]
 final class ExamDocumentation {}
