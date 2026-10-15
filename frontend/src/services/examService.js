@@ -17,3 +17,7 @@ export function createExam(teacherId, payload) {
 export function updateExam(teacherId, examId, payload) {
   return api.put(`/teachers/${teacherId}/exams/${examId}`, payload)
 }
+
+export function deleteExam(teacherId, examId) {
+  return api.delete(`/teachers/${teacherId}/exams/${examId}`)
+}

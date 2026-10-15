@@ -1,26 +1,45 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
 import AlertMessage from '@/components/AlertMessage.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
-import { getExam } from '@/services/examService'
+import { deleteExam, getExam } from '@/services/examService'
 import { useSessionStore } from '@/stores/session'
 
 const props = defineProps({
   id: { type: String, required: true },
 })
 
+const router = useRouter()
 const session = useSessionStore()
 
 const exam = ref(null)
 const loading = ref(true)
 const notFound = ref(false)
 const error = ref('')
+const confirmingDelete = ref(false)
+const deleting = ref(false)
 
 const letters = 'ABCDE'
 
 const isDraft = computed(() => exam.value?.status === 'draft')
+
+async function confirmDelete() {
+  deleting.value = true
+  error.value = ''
+
+  try {
+    await deleteExam(session.userId, props.id)
+    router.push({ name: 'teacher-exams', query: { deleted: '1' } })
+  } catch (failure) {
+    error.value = failure.message
+  } finally {
+    deleting.value = false
+    confirmingDelete.value = false
+  }
+}
 
 function formatDate(value) {
   return value ? new Date(value).toLocaleString('pt-BR') : '—'
@@ -52,9 +71,11 @@ onMounted(async () => {
       <RouterLink :to="{ name: 'teacher-exams' }">Ir para a lista de provas</RouterLink>
     </div>
 
-    <AlertMessage v-else-if="error" :message="error" />
+    <AlertMessage v-else-if="error && !exam" :message="error" />
 
-    <template v-else-if="exam">
+    <template v-if="exam">
+      <AlertMessage :message="error" />
+
       <header class="exam-detail__header">
         <div>
           <h1>{{ exam.title }}</h1>
@@ -72,7 +93,15 @@ onMounted(async () => {
             <RouterLink :to="{ name: 'teacher-exam-edit', params: { id: exam.id } }" class="button">Editar</RouterLink>
             <button type="button" disabled title="Disponível em breve">Publicar</button>
           </template>
-          <button type="button" class="danger" disabled title="Disponível em breve">Excluir</button>
+          <button
+            type="button"
+            class="danger"
+            :disabled="exam.attempts_count > 0"
+            :title="exam.attempts_count > 0 ? 'Prova já respondida por alunos' : 'Excluir prova'"
+            @click="confirmingDelete = true"
+          >
+            Excluir
+          </button>
         </div>
       </header>
 
@@ -100,6 +129,17 @@ onMounted(async () => {
         </li>
       </ol>
     </template>
+
+    <ConfirmDialog
+      :open="confirmingDelete"
+      title="Excluir prova"
+      :message="`Excluir a prova '${exam?.title}'? Esta ação não pode ser desfeita.`"
+      confirm-label="Excluir"
+      danger
+      :processing="deleting"
+      @confirm="confirmDelete"
+      @cancel="confirmingDelete = false"
+    />
   </section>
 </template>
 

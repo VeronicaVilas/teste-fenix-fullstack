@@ -1,13 +1,15 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 
 import AlertMessage from '@/components/AlertMessage.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
-import { listExams } from '@/services/examService'
+import { deleteExam, listExams } from '@/services/examService'
 import { useSessionStore } from '@/stores/session'
 
+const route = useRoute()
 const session = useSessionStore()
 
 const filters = [
@@ -21,6 +23,9 @@ const exams = ref([])
 const meta = ref({ current_page: 1, last_page: 1, per_page: 10, total: 0 })
 const loading = ref(false)
 const error = ref('')
+const success = ref(route.query.deleted ? 'Prova excluída.' : '')
+const examToDelete = ref(null)
+const deleting = ref(false)
 
 async function load(page = 1) {
   loading.value = true
@@ -34,6 +39,24 @@ async function load(page = 1) {
     error.value = failure.message
   } finally {
     loading.value = false
+  }
+}
+
+async function confirmDelete() {
+  deleting.value = true
+  error.value = ''
+  success.value = ''
+
+  try {
+    await deleteExam(session.userId, examToDelete.value.id)
+    success.value = 'Prova excluída.'
+    const isLastItemOfPage = exams.value.length === 1 && meta.value.current_page > 1
+    await load(isLastItemOfPage ? meta.value.current_page - 1 : meta.value.current_page)
+  } catch (failure) {
+    error.value = failure.message
+  } finally {
+    deleting.value = false
+    examToDelete.value = null
   }
 }
 
@@ -66,6 +89,7 @@ onMounted(() => load())
     </div>
 
     <AlertMessage :message="error" />
+    <AlertMessage :message="success" type="success" />
 
     <p v-if="loading" class="exam-list__state">Carregando provas...</p>
 
@@ -98,13 +122,32 @@ onMounted(() => load())
               <RouterLink :to="{ name: 'teacher-exam-edit', params: { id: exam.id } }" class="button">Editar</RouterLink>
               <button type="button" disabled title="Disponível em breve">Publicar</button>
             </template>
-            <button type="button" class="danger" disabled title="Disponível em breve">Excluir</button>
+            <button
+              type="button"
+              class="danger"
+              :disabled="exam.attempts_count > 0"
+              :title="exam.attempts_count > 0 ? 'Prova já respondida por alunos' : 'Excluir prova'"
+              @click="examToDelete = exam"
+            >
+              Excluir
+            </button>
           </td>
         </tr>
       </tbody>
     </table>
 
     <PaginationBar :meta="meta" :disabled="loading" @change="load" />
+
+    <ConfirmDialog
+      :open="examToDelete !== null"
+      title="Excluir prova"
+      :message="`Excluir a prova '${examToDelete?.title}'? Esta ação não pode ser desfeita.`"
+      confirm-label="Excluir"
+      danger
+      :processing="deleting"
+      @confirm="confirmDelete"
+      @cancel="examToDelete = null"
+    />
   </section>
 </template>
 
