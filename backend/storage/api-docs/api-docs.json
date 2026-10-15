@@ -157,6 +157,64 @@
                 }
             }
         },
+        "/teachers/{teacher}/exams/{exam}": {
+            "get": {
+                "tags": [
+                    "Exams (Professor)"
+                ],
+                "summary": "Exibe uma prova do professor com o gabarito",
+                "description": "Questões e alternativas ordenadas por posição, com is_correct. Prova de outro professor retorna 404.",
+                "operationId": "showTeacherExam",
+                "parameters": [
+                    {
+                        "name": "teacher",
+                        "in": "path",
+                        "description": "Id do professor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "exam",
+                        "in": "path",
+                        "description": "Id da prova",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Prova encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Prova encontrada."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ExamTeacher"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
         "/up": {
             "get": {
                 "tags": [
@@ -443,6 +501,10 @@
                     "questions_count": {
                         "type": "integer",
                         "example": 1
+                    },
+                    "attempts_count": {
+                        "type": "integer",
+                        "example": 0
                     },
                     "questions": {
                         "type": "array",

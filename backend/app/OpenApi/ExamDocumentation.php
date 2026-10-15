@@ -61,4 +61,29 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 422, ref: '#/components/responses/UnprocessableEntity'),
     ]
 )]
+#[OA\Get(
+    path: '/teachers/{teacher}/exams/{exam}',
+    operationId: 'showTeacherExam',
+    summary: 'Exibe uma prova do professor com o gabarito',
+    description: 'Questões e alternativas ordenadas por posição, com is_correct. Prova de outro professor retorna 404.',
+    tags: ['Exams (Professor)'],
+    parameters: [
+        new OA\Parameter(name: 'teacher', description: 'Id do professor', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'exam', description: 'Id da prova', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+    ],
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: 'Prova encontrada',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'message', type: 'string', example: 'Prova encontrada.'),
+                    new OA\Property(property: 'status', type: 'integer', example: 200),
+                    new OA\Property(property: 'data', ref: '#/components/schemas/ExamTeacher'),
+                ]
+            )
+        ),
+        new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+    ]
+)]
 final class ExamDocumentation {}

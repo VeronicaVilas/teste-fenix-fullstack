@@ -78,6 +78,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'status', type: 'string', enum: ['draft', 'published'], example: 'draft'),
         new OA\Property(property: 'published_at', type: 'string', format: 'date-time', nullable: true, example: null),
         new OA\Property(property: 'questions_count', type: 'integer', example: 1),
+        new OA\Property(property: 'attempts_count', type: 'integer', example: 0),
         new OA\Property(property: 'questions', type: 'array', items: new OA\Items(ref: '#/components/schemas/QuestionTeacher')),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
         new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
