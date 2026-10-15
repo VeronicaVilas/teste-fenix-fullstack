@@ -35,12 +35,207 @@
                     }
                 ]
             }
+        },
+        "/teachers": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Lista os professores",
+                "description": "Usado pelo acesso \"Professor\" do frontend. Ordenado por nome.",
+                "operationId": "listTeachers",
+                "responses": {
+                    "200": {
+                        "description": "Professores listados",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Professores listados com sucesso."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/students": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Lista os alunos",
+                "description": "Usado pelo acesso \"Aluno\" do frontend para escolher qual aluno fará a prova. Ordenado por nome.",
+                "operationId": "listStudents",
+                "responses": {
+                    "200": {
+                        "description": "Alunos listados",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Alunos listados com sucesso."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "User": {
+                "required": [
+                    "id",
+                    "name",
+                    "email"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Aluno Fênix"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "student@fenix.local"
+                    }
+                },
+                "type": "object"
+            },
+            "ErrorResponse": {
+                "required": [
+                    "message",
+                    "status",
+                    "errors",
+                    "data"
+                ],
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Recurso não encontrado."
+                    },
+                    "status": {
+                        "type": "integer",
+                        "example": 404
+                    },
+                    "errors": {
+                        "type": "object",
+                        "example": []
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {},
+                        "example": []
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationErrorResponse": {
+                "required": [
+                    "message",
+                    "status",
+                    "errors",
+                    "data"
+                ],
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Os dados enviados são inválidos."
+                    },
+                    "status": {
+                        "type": "integer",
+                        "example": 422
+                    },
+                    "errors": {
+                        "type": "object",
+                        "example": {
+                            "title": [
+                                "O título é obrigatório."
+                            ]
+                        },
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {},
+                        "example": []
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "responses": {
+            "NotFound": {
+                "description": "Recurso não encontrado",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "UnprocessableEntity": {
+                "description": "Dados inválidos",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ValidationErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "tags": [
         {
             "name": "Health",
             "description": "Health"
+        },
+        {
+            "name": "Users",
+            "description": "Users"
         }
     ]
 }
