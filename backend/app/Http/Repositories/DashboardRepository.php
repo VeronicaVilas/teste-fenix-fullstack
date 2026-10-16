@@ -4,6 +4,7 @@ namespace App\Http\Repositories;
 
 use App\Enums\ExamStatus;
 use App\Interfaces\DashboardRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -69,6 +70,18 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->get()
             ->map(fn (object $row) => (array) $row)
             ->all();
+    }
+
+    public function ranking(int $teacherId, ?int $examId, int $page, int $perPage): LengthAwarePaginator
+    {
+        return $this->attemptsOf($teacherId, $examId)
+            ->select(['attempts.id as attempt_id', ...self::ATTEMPT_COLUMNS])
+            ->selectRaw('ROW_NUMBER() OVER (ORDER BY attempts.percentage DESC, attempts.submitted_at ASC, attempts.id ASC) as position')
+            ->orderByDesc('attempts.percentage')
+            ->orderBy('attempts.submitted_at')
+            ->orderBy('attempts.id')
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->through(fn (object $row) => (array) $row);
     }
 
     private function attemptsOf(int $teacherId, ?int $examId): Builder

@@ -2,6 +2,8 @@
 
 namespace App\Interfaces;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
 interface DashboardRepositoryInterface
 {
     /**
@@ -17,4 +19,6 @@ interface DashboardRepositoryInterface
      * @return array<int, array<string, mixed>>
      */
     public function examStats(int $teacherId): array;
+
+    public function ranking(int $teacherId, ?int $examId, int $page, int $perPage): LengthAwarePaginator;
 }

@@ -25,4 +25,9 @@ class DashboardFilterRequest extends PaginationRequest
     {
         return $this->filled('exam_id') ? $this->integer('exam_id') : null;
     }
+
+    public function page(): int
+    {
+        return $this->integer('page', 1);
+    }
 }
