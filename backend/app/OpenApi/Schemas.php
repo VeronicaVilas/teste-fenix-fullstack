@@ -214,4 +214,34 @@ use OpenApi\Attributes as OA;
         ),
     ]
 )]
+#[OA\Schema(
+    schema: 'SubmitAttemptRequest',
+    required: ['answers'],
+    properties: [
+        new OA\Property(
+            property: 'answers',
+            description: 'Uma resposta para cada questão da prova.',
+            type: 'array',
+            items: new OA\Items(
+                required: ['question_id', 'option_id'],
+                properties: [
+                    new OA\Property(property: 'question_id', type: 'integer', example: 10),
+                    new OA\Property(property: 'option_id', type: 'integer', example: 32),
+                ]
+            )
+        ),
+    ]
+)]
+#[OA\Schema(
+    schema: 'Attempt',
+    required: ['id', 'exam_id', 'score', 'total_questions', 'percentage', 'submitted_at'],
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 7),
+        new OA\Property(property: 'exam_id', type: 'integer', example: 3),
+        new OA\Property(property: 'score', type: 'integer', example: 4),
+        new OA\Property(property: 'total_questions', type: 'integer', example: 5),
+        new OA\Property(property: 'percentage', type: 'string', example: '80.00'),
+        new OA\Property(property: 'submitted_at', type: 'string', format: 'date-time'),
+    ]
+)]
 final class Schemas {}

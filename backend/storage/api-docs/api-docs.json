@@ -12,6 +12,106 @@
         }
     ],
     "paths": {
+        "/students/{student}/exams/{exam}/attempt": {
+            "post": {
+                "tags": [
+                    "Attempts"
+                ],
+                "summary": "Envia as respostas e corrige a prova automaticamente",
+                "description": "Cada aluno responde cada prova uma única vez. Todas as questões devem ser respondidas. 1 ponto por acerto; percentual com 2 casas.",
+                "operationId": "submitAttempt",
+                "parameters": [
+                    {
+                        "name": "student",
+                        "in": "path",
+                        "description": "Id do aluno",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "exam",
+                        "in": "path",
+                        "description": "Id da prova",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubmitAttemptRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Prova corrigida",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Prova enviada e corrigida com sucesso."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 201
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Attempt"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "description": "Prova já respondida pelo aluno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "message": "Você já respondeu esta prova.",
+                                    "status": 409,
+                                    "errors": [],
+                                    "data": []
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Respostas inválidas (formato, questão faltando ou alternativa de outra questão)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "message": "Responda todas as questões da prova.",
+                                    "status": 422,
+                                    "errors": [],
+                                    "data": []
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/teachers/{teacher}/exams": {
             "get": {
                 "tags": [
@@ -1189,6 +1289,72 @@
                     }
                 },
                 "type": "object"
+            },
+            "SubmitAttemptRequest": {
+                "required": [
+                    "answers"
+                ],
+                "properties": {
+                    "answers": {
+                        "description": "Uma resposta para cada questão da prova.",
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "question_id",
+                                "option_id"
+                            ],
+                            "properties": {
+                                "question_id": {
+                                    "type": "integer",
+                                    "example": 10
+                                },
+                                "option_id": {
+                                    "type": "integer",
+                                    "example": 32
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Attempt": {
+                "required": [
+                    "id",
+                    "exam_id",
+                    "score",
+                    "total_questions",
+                    "percentage",
+                    "submitted_at"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "exam_id": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "score": {
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "total_questions": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "percentage": {
+                        "type": "string",
+                        "example": "80.00"
+                    },
+                    "submitted_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
             }
         },
         "responses": {
@@ -1215,6 +1381,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Attempts",
+            "description": "Attempts"
+        },
         {
             "name": "Exams (Professor)",
             "description": "Exams (Professor)"
