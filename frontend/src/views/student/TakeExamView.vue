@@ -3,7 +3,8 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import AlertMessage from '@/components/AlertMessage.vue'
-import { getAvailableExam } from '@/services/studentExamService'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { getAvailableExam, submitAttempt } from '@/services/studentExamService'
 import { useSessionStore } from '@/stores/session'
 
 const props = defineProps({
@@ -17,11 +18,38 @@ const answers = reactive({})
 const loading = ref(true)
 const notFound = ref(false)
 const error = ref('')
+const confirmingSubmit = ref(false)
+const submitting = ref(false)
+const submitError = ref('')
+const result = ref(null)
 
 const letters = 'ABCDE'
 
 const answeredCount = computed(() => Object.keys(answers).length)
 const totalQuestions = computed(() => exam.value?.questions.length ?? 0)
+const allAnswered = computed(() => totalQuestions.value > 0 && answeredCount.value === totalQuestions.value)
+
+function formatPercentage(value) {
+  return `${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`
+}
+
+async function confirmSubmit() {
+  submitting.value = true
+  submitError.value = ''
+
+  try {
+    result.value = await submitAttempt(session.userId, props.id, answers)
+  } catch (failure) {
+    if (failure.status === 409) {
+      exam.value.answered = true
+    } else {
+      submitError.value = failure.message
+    }
+  } finally {
+    submitting.value = false
+    confirmingSubmit.value = false
+  }
+}
 
 onMounted(async () => {
   try {
@@ -50,6 +78,15 @@ onMounted(async () => {
     </div>
 
     <AlertMessage v-else-if="error" :message="error" />
+
+    <div v-else-if="result" class="take-exam__result">
+      <h1>Prova enviada!</h1>
+      <p class="take-exam__score">
+        Você acertou {{ result.score }} de {{ result.total_questions }} questões
+        ({{ formatPercentage(result.percentage) }}).
+      </p>
+      <RouterLink :to="{ name: 'student-exams' }" class="button button--primary">Voltar para minhas provas</RouterLink>
+    </div>
 
     <div v-else-if="exam.answered" class="take-exam__state">
       <p>Você já respondeu esta prova.</p>
@@ -82,10 +119,30 @@ onMounted(async () => {
         </li>
       </ol>
 
+      <AlertMessage :message="submitError" />
+
       <footer class="take-exam__footer">
         <span>Respondidas: {{ answeredCount }} de {{ totalQuestions }}</span>
-        <button type="button" class="primary" disabled title="Disponível em breve">Enviar prova</button>
+        <button
+          type="button"
+          class="primary"
+          :disabled="!allAnswered || submitting"
+          :title="allAnswered ? 'Enviar respostas' : 'Responda todas as questões para enviar'"
+          @click="confirmingSubmit = true"
+        >
+          {{ submitting ? 'Corrigindo...' : 'Enviar prova' }}
+        </button>
       </footer>
+
+      <ConfirmDialog
+        :open="confirmingSubmit"
+        title="Enviar respostas"
+        message="Enviar respostas? Não será possível alterar depois."
+        confirm-label="Enviar"
+        :processing="submitting"
+        @confirm="confirmSubmit"
+        @cancel="confirmingSubmit = false"
+      />
     </template>
   </section>
 </template>
@@ -162,6 +219,33 @@ onMounted(async () => {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 8px;
+}
+
+.take-exam__result {
+  padding: 2rem;
+  margin-top: 1rem;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-success);
+  border-radius: 8px;
+}
+
+.take-exam__score {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.button {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.button--primary {
+  background: var(--color-primary);
+  color: #fff;
 }
 
 button {

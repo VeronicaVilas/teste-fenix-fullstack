@@ -5,10 +5,10 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import TakeExamView from '../TakeExamView.vue'
 import { routes } from '@/router'
-import { getAvailableExam } from '@/services/studentExamService'
+import { getAvailableExam, submitAttempt } from '@/services/studentExamService'
 import { ROLES, useSessionStore } from '@/stores/session'
 
-vi.mock('@/services/studentExamService', () => ({ getAvailableExam: vi.fn() }))
+vi.mock('@/services/studentExamService', () => ({ getAvailableExam: vi.fn(), submitAttempt: vi.fn() }))
 
 function exam(overrides = {}) {
   return {
@@ -111,5 +111,77 @@ describe('TakeExamView', () => {
     getAvailableExam.mockRejectedValue({ status: 0, message: 'Não foi possível conectar ao servidor.', errors: {} })
 
     expect((await mountExam()).text()).toContain('Não foi possível conectar ao servidor.')
+  })
+
+  describe('submission', () => {
+    async function answerAll(wrapper) {
+      const questions = wrapper.findAll('.question')
+      await questions[0].findAll('input[type="radio"]')[1].setValue()
+      await questions[1].findAll('input[type="radio"]')[0].setValue()
+    }
+
+    function submitButton(wrapper) {
+      return wrapper.find('.take-exam__footer button')
+    }
+
+    it('enables sending only after every question is answered', async () => {
+      getAvailableExam.mockResolvedValue(exam())
+      const wrapper = await mountExam()
+
+      expect(submitButton(wrapper).attributes('disabled')).toBeDefined()
+
+      await wrapper.findAll('.question')[0].findAll('input[type="radio"]')[0].setValue()
+      expect(submitButton(wrapper).attributes('disabled')).toBeDefined()
+
+      await wrapper.findAll('.question')[1].findAll('input[type="radio"]')[0].setValue()
+      expect(submitButton(wrapper).attributes('disabled')).toBeUndefined()
+    })
+
+    it('asks for confirmation and shows the score', async () => {
+      getAvailableExam.mockResolvedValue(exam())
+      submitAttempt.mockResolvedValue({ id: 7, exam_id: 10, score: 2, total_questions: 2, percentage: '100.00' })
+      const wrapper = await mountExam()
+
+      await answerAll(wrapper)
+      await submitButton(wrapper).trigger('click')
+      expect(wrapper.find('[role="dialog"]').text()).toContain('Não será possível alterar depois.')
+      expect(submitAttempt).not.toHaveBeenCalled()
+
+      await wrapper.find('.dialog__confirm').trigger('click')
+      await flushPromises()
+
+      expect(submitAttempt).toHaveBeenCalledWith(3, '10', { 20: 32, 21: 33 })
+      expect(wrapper.text()).toContain('Prova enviada!')
+      expect(wrapper.text()).toContain('Você acertou 2 de 2 questões (100%)')
+      expect(wrapper.find('.question').exists()).toBe(false)
+    })
+
+    it('shows that the exam was already answered on 409', async () => {
+      getAvailableExam.mockResolvedValue(exam())
+      submitAttempt.mockRejectedValue({ status: 409, message: 'Você já respondeu esta prova.', errors: {} })
+      const wrapper = await mountExam()
+
+      await answerAll(wrapper)
+      await submitButton(wrapper).trigger('click')
+      await wrapper.find('.dialog__confirm').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('Você já respondeu esta prova.')
+      expect(wrapper.find('.question').exists()).toBe(false)
+    })
+
+    it('keeps the answers and shows the message on 422', async () => {
+      getAvailableExam.mockResolvedValue(exam())
+      submitAttempt.mockRejectedValue({ status: 422, message: 'Responda todas as questões da prova.', errors: {} })
+      const wrapper = await mountExam()
+
+      await answerAll(wrapper)
+      await submitButton(wrapper).trigger('click')
+      await wrapper.find('.dialog__confirm').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('Responda todas as questões da prova.')
+      expect(wrapper.text()).toContain('Respondidas: 2 de 2')
+    })
   })
 })
