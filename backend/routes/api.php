@@ -28,4 +28,5 @@ Route::prefix('students/{student}')->group(function () {
     Route::get('exams', [StudentExamController::class, 'index']);
     Route::get('exams/{exam}', [StudentExamController::class, 'show'])->whereNumber('exam');
     Route::post('exams/{exam}/attempt', [AttemptController::class, 'store'])->whereNumber('exam');
+    Route::get('exams/{exam}/attempt', [AttemptController::class, 'show'])->whereNumber('exam');
 });

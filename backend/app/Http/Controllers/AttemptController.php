@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SubmitAttemptRequest;
 use App\Http\Resources\AttemptResource;
+use App\Http\Resources\AttemptResultResource;
+use App\Http\Services\Attempt\GetAttemptResultService;
 use App\Http\Services\Attempt\SubmitAttemptService;
 use App\Models\User;
 use App\Traits\HttpResponses;
@@ -20,6 +22,15 @@ class AttemptController extends Controller
             'Prova enviada e corrigida com sucesso.',
             Response::HTTP_CREATED,
             new AttemptResource($service->handle($student, $exam, $request->validated('answers'))),
+        );
+    }
+
+    public function show(User $student, int $exam, GetAttemptResultService $service): JsonResponse
+    {
+        return $this->response(
+            'Resultado encontrado.',
+            Response::HTTP_OK,
+            new AttemptResultResource($service->handle($student, $exam)),
         );
     }
 }

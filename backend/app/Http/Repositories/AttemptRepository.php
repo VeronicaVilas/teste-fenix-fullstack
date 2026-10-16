@@ -24,4 +24,13 @@ class AttemptRepository implements AttemptRepositoryInterface
     {
         $attempt->answers()->createMany($answers);
     }
+
+    public function findForStudentWithReview(int $examId, int $studentId): ?Attempt
+    {
+        return Attempt::query()
+            ->where('exam_id', $examId)
+            ->where('student_id', $studentId)
+            ->with(['exam.questions.options', 'answers'])
+            ->first();
+    }
 }

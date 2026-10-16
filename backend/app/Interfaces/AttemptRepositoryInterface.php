@@ -11,4 +11,6 @@ interface AttemptRepositoryInterface
     public function create(array $data): Attempt;
 
     public function createAnswers(Attempt $attempt, array $answers): void;
+
+    public function findForStudentWithReview(int $examId, int $studentId): ?Attempt;
 }
