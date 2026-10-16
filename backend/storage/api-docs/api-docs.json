@@ -242,6 +242,88 @@
                 }
             }
         },
+        "/teachers/{teacher}/dashboard/ranking": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Ranking paginado das tentativas",
+                "description": "Ordenado por percentual (maior primeiro); empate → quem enviou primeiro. A posição é calculada no banco com ROW_NUMBER(), contínua entre as páginas. Cada página fica no Redis por 10 minutos.",
+                "operationId": "dashboardRanking",
+                "parameters": [
+                    {
+                        "name": "teacher",
+                        "in": "path",
+                        "description": "Id do professor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "exam_id",
+                        "in": "query",
+                        "description": "Filtra por uma prova do professor",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 50,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ranking carregado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ranking carregado com sucesso."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/PaginatedRanking"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
+                    }
+                }
+            }
+        },
         "/teachers/{teacher}/exams": {
             "get": {
                 "tags": [
@@ -1701,6 +1783,71 @@
                             },
                             "type": "object"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "RankingItem": {
+                "required": [
+                    "position",
+                    "attempt_id",
+                    "student_name",
+                    "exam_title",
+                    "score",
+                    "total_questions",
+                    "percentage",
+                    "submitted_at"
+                ],
+                "properties": {
+                    "position": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "attempt_id": {
+                        "type": "integer",
+                        "example": 9
+                    },
+                    "student_name": {
+                        "type": "string",
+                        "example": "Ana Souza"
+                    },
+                    "exam_title": {
+                        "type": "string",
+                        "example": "Prova de Geografia"
+                    },
+                    "score": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "total_questions": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "percentage": {
+                        "type": "string",
+                        "example": "100.00"
+                    },
+                    "submitted_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatedRanking": {
+                "required": [
+                    "items",
+                    "meta"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RankingItem"
+                        }
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/PaginationMeta"
                     }
                 },
                 "type": "object"
