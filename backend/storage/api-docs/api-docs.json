@@ -523,6 +523,64 @@
                 }
             }
         },
+        "/students/{student}/exams/{exam}": {
+            "get": {
+                "tags": [
+                    "Exams (Aluno)"
+                ],
+                "summary": "Abre uma prova publicada para o aluno responder",
+                "description": "Questões e alternativas sem o gabarito. Rascunho ou prova inexistente retornam 404. O conteúdo fica em cache, pois prova publicada é imutável.",
+                "operationId": "showAvailableExam",
+                "parameters": [
+                    {
+                        "name": "student",
+                        "in": "path",
+                        "description": "Id do aluno",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "exam",
+                        "in": "path",
+                        "description": "Id da prova",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Prova encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Prova encontrada."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentExam"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
         "/teachers": {
             "get": {
                 "tags": [
@@ -1054,6 +1112,80 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                },
+                "type": "object"
+            },
+            "StudentExam": {
+                "description": "Prova vista pelo aluno: nunca contém is_correct.",
+                "required": [
+                    "id",
+                    "title",
+                    "questions_count",
+                    "answered",
+                    "questions"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Prova de Geografia"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Capitais e relevo",
+                        "nullable": true
+                    },
+                    "questions_count": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "answered": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "questions": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 10
+                                },
+                                "position": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "statement": {
+                                    "type": "string",
+                                    "example": "Qual é a capital do Brasil?"
+                                },
+                                "options": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 32
+                                            },
+                                            "position": {
+                                                "type": "integer",
+                                                "example": 2
+                                            },
+                                            "text": {
+                                                "type": "string",
+                                                "example": "Brasília"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            },
+                            "type": "object"
+                        }
                     }
                 },
                 "type": "object"

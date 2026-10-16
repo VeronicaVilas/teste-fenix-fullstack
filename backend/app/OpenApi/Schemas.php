@@ -180,4 +180,38 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
     ]
 )]
+#[OA\Schema(
+    schema: 'StudentExam',
+    description: 'Prova vista pelo aluno: nunca contém is_correct.',
+    required: ['id', 'title', 'questions_count', 'answered', 'questions'],
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 3),
+        new OA\Property(property: 'title', type: 'string', example: 'Prova de Geografia'),
+        new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Capitais e relevo'),
+        new OA\Property(property: 'questions_count', type: 'integer', example: 1),
+        new OA\Property(property: 'answered', type: 'boolean', example: false),
+        new OA\Property(
+            property: 'questions',
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'id', type: 'integer', example: 10),
+                    new OA\Property(property: 'position', type: 'integer', example: 1),
+                    new OA\Property(property: 'statement', type: 'string', example: 'Qual é a capital do Brasil?'),
+                    new OA\Property(
+                        property: 'options',
+                        type: 'array',
+                        items: new OA\Items(
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 32),
+                                new OA\Property(property: 'position', type: 'integer', example: 2),
+                                new OA\Property(property: 'text', type: 'string', example: 'Brasília'),
+                            ]
+                        )
+                    ),
+                ]
+            )
+        ),
+    ]
+)]
 final class Schemas {}
