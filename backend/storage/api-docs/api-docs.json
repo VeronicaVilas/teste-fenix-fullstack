@@ -13,6 +13,75 @@
     ],
     "paths": {
         "/students/{student}/exams/{exam}/attempt": {
+            "get": {
+                "tags": [
+                    "Attempts"
+                ],
+                "summary": "Revisa o resultado da prova respondida",
+                "description": "Nota, percentual e, por questão, a alternativa marcada e a correta. O gabarito só aparece depois do envio.",
+                "operationId": "showAttemptResult",
+                "parameters": [
+                    {
+                        "name": "student",
+                        "in": "path",
+                        "description": "Id do aluno",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "exam",
+                        "in": "path",
+                        "description": "Id da prova",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resultado encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Resultado encontrado."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AttemptResult"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aluno inválido ou prova ainda não respondida",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "message": "Você ainda não respondeu esta prova.",
+                                    "status": 404,
+                                    "errors": [],
+                                    "data": []
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "Attempts"
@@ -1352,6 +1421,92 @@
                     "submitted_at": {
                         "type": "string",
                         "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "AttemptResult": {
+                "description": "Revisão da tentativa: nota, resposta dada e gabarito de cada questão.",
+                "required": [
+                    "id",
+                    "exam",
+                    "score",
+                    "total_questions",
+                    "percentage",
+                    "submitted_at",
+                    "questions"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "exam": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "title": {
+                                "type": "string",
+                                "example": "Prova de Geografia"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "score": {
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "total_questions": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "percentage": {
+                        "type": "string",
+                        "example": "80.00"
+                    },
+                    "submitted_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "questions": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 10
+                                },
+                                "position": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "statement": {
+                                    "type": "string",
+                                    "example": "Qual é a capital do Brasil?"
+                                },
+                                "selected_option_id": {
+                                    "type": "integer",
+                                    "example": 31
+                                },
+                                "correct_option_id": {
+                                    "type": "integer",
+                                    "example": 32
+                                },
+                                "is_correct": {
+                                    "type": "boolean",
+                                    "example": false
+                                },
+                                "options": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OptionTeacher"
+                                    }
+                                }
+                            },
+                            "type": "object"
+                        }
                     }
                 },
                 "type": "object"

@@ -244,4 +244,39 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'submitted_at', type: 'string', format: 'date-time'),
     ]
 )]
+#[OA\Schema(
+    schema: 'AttemptResult',
+    description: 'Revisão da tentativa: nota, resposta dada e gabarito de cada questão.',
+    required: ['id', 'exam', 'score', 'total_questions', 'percentage', 'submitted_at', 'questions'],
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 7),
+        new OA\Property(
+            property: 'exam',
+            properties: [
+                new OA\Property(property: 'id', type: 'integer', example: 3),
+                new OA\Property(property: 'title', type: 'string', example: 'Prova de Geografia'),
+            ],
+            type: 'object'
+        ),
+        new OA\Property(property: 'score', type: 'integer', example: 4),
+        new OA\Property(property: 'total_questions', type: 'integer', example: 5),
+        new OA\Property(property: 'percentage', type: 'string', example: '80.00'),
+        new OA\Property(property: 'submitted_at', type: 'string', format: 'date-time'),
+        new OA\Property(
+            property: 'questions',
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'id', type: 'integer', example: 10),
+                    new OA\Property(property: 'position', type: 'integer', example: 1),
+                    new OA\Property(property: 'statement', type: 'string', example: 'Qual é a capital do Brasil?'),
+                    new OA\Property(property: 'selected_option_id', type: 'integer', example: 31),
+                    new OA\Property(property: 'correct_option_id', type: 'integer', example: 32),
+                    new OA\Property(property: 'is_correct', type: 'boolean', example: false),
+                    new OA\Property(property: 'options', type: 'array', items: new OA\Items(ref: '#/components/schemas/OptionTeacher')),
+                ]
+            )
+        ),
+    ]
+)]
 final class Schemas {}

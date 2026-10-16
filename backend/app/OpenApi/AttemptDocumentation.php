@@ -49,4 +49,36 @@ use OpenApi\Attributes as OA;
         ),
     ]
 )]
+#[OA\Get(
+    path: '/students/{student}/exams/{exam}/attempt',
+    operationId: 'showAttemptResult',
+    summary: 'Revisa o resultado da prova respondida',
+    description: 'Nota, percentual e, por questão, a alternativa marcada e a correta. O gabarito só aparece depois do envio.',
+    tags: ['Attempts'],
+    parameters: [
+        new OA\Parameter(name: 'student', description: 'Id do aluno', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        new OA\Parameter(name: 'exam', description: 'Id da prova', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+    ],
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: 'Resultado encontrado',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'message', type: 'string', example: 'Resultado encontrado.'),
+                    new OA\Property(property: 'status', type: 'integer', example: 200),
+                    new OA\Property(property: 'data', ref: '#/components/schemas/AttemptResult'),
+                ]
+            )
+        ),
+        new OA\Response(
+            response: 404,
+            description: 'Aluno inválido ou prova ainda não respondida',
+            content: new OA\JsonContent(
+                ref: '#/components/schemas/ErrorResponse',
+                example: ['message' => 'Você ainda não respondeu esta prova.', 'status' => 404, 'errors' => [], 'data' => []]
+            )
+        ),
+    ]
+)]
 final class AttemptDocumentation {}
