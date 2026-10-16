@@ -115,6 +115,21 @@ class CreateExamTest extends TestCase
             ]);
     }
 
+    public function test_rejects_options_that_are_not_a_list(): void
+    {
+        $this->mockTeacher();
+        $this->mockExamRepositoryNotCalled();
+
+        $payload = $this->payload;
+        $payload['questions'][0]['options'] = 'Brasília';
+
+        $this->postJson(self::URL, $payload)
+            ->assertUnprocessable()
+            ->assertJsonPath('errors', [
+                'questions.0.options' => ['As alternativas devem ser enviadas em uma lista.'],
+            ]);
+    }
+
     public function test_accepts_at_most_five_options(): void
     {
         $this->mockTeacher();

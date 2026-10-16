@@ -72,9 +72,9 @@ class StoreExamRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'questions' => ['required', 'array', 'min:1', 'max:100'],
+            'questions' => ['bail', 'required', 'array', 'min:1', 'max:100'],
             'questions.*.statement' => ['required', 'string', 'max:2000'],
-            'questions.*.options' => ['required', 'array', 'min:2', 'max:5'],
+            'questions.*.options' => ['bail', 'required', 'array', 'min:2', 'max:5'],
             'questions.*.options.*.text' => ['required', 'string', 'max:500'],
             'questions.*.options.*.is_correct' => ['required', 'boolean'],
         ];
