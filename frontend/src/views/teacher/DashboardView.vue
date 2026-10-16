@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 
 import AlertMessage from '@/components/AlertMessage.vue'
+import RankingGrid from '@/components/RankingGrid.vue'
 import { getDashboardSummary } from '@/services/dashboardService'
 import { useSessionStore } from '@/stores/session'
 
@@ -107,6 +108,8 @@ onMounted(load)
           </tr>
         </tbody>
       </table>
+
+      <RankingGrid :exam-id="examId" />
     </template>
   </section>
 </template>

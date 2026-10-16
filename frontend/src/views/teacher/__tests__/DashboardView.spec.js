@@ -6,7 +6,13 @@ import DashboardView from '../DashboardView.vue'
 import { getDashboardSummary } from '@/services/dashboardService'
 import { ROLES, useSessionStore } from '@/stores/session'
 
-vi.mock('@/services/dashboardService', () => ({ getDashboardSummary: vi.fn() }))
+vi.mock('@/services/dashboardService', () => ({
+  getDashboardSummary: vi.fn(),
+  getDashboardRanking: vi.fn().mockResolvedValue({
+    items: [],
+    meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 },
+  }),
+}))
 
 const exams = [
   { id: 10, title: 'Prova de Geografia', attempts_count: 3, average_percentage: '66.67', best_percentage: '100.00', worst_percentage: '33.33' },
@@ -65,10 +71,10 @@ describe('DashboardView', () => {
     getDashboardSummary.mockResolvedValue(summary)
     const wrapper = await mountDashboard()
 
-    const options = wrapper.findAll('select option')
+    const options = wrapper.findAll('.dashboard__filter option')
     expect(options.map((option) => option.text())).toEqual(['Todas', 'Prova de Geografia', 'Prova de História'])
 
-    await wrapper.find('select').setValue(10)
+    await wrapper.find('.dashboard__filter select').setValue(10)
     await flushPromises()
 
     expect(getDashboardSummary).toHaveBeenLastCalledWith(1, 10)

@@ -5,3 +5,9 @@ export function getDashboardSummary(teacherId, examId = null) {
     params: examId ? { exam_id: examId } : {},
   })
 }
+
+export function getDashboardRanking(teacherId, { examId = null, page = 1, perPage = 10 } = {}) {
+  return api.get(`/teachers/${teacherId}/dashboard/ranking`, {
+    params: { page, per_page: perPage, ...(examId ? { exam_id: examId } : {}) },
+  })
+}
