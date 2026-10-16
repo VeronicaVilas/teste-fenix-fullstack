@@ -92,4 +92,15 @@ class ExamRepository implements ExamRepositoryInterface
             ->latest('id')
             ->paginate($perPage);
     }
+
+    public function paginatePublishedForStudent(User $student, int $perPage): LengthAwarePaginator
+    {
+        return Exam::query()
+            ->published()
+            ->withCount('questions')
+            ->with(['attempts' => fn ($query) => $query->where('student_id', $student->id)])
+            ->latest('published_at')
+            ->latest('id')
+            ->paginate($perPage);
+    }
 }

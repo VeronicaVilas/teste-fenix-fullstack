@@ -30,4 +30,6 @@ interface ExamRepositoryInterface
     public function loadDetails(Exam $exam): Exam;
 
     public function paginateByTeacher(User $teacher, ?ExamStatus $status, int $perPage): LengthAwarePaginator;
+
+    public function paginatePublishedForStudent(User $student, int $perPage): LengthAwarePaginator;
 }

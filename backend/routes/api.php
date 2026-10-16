@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentExamController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,4 +21,8 @@ Route::prefix('teachers/{teacher}')->group(function () {
     Route::put('exams/{exam}', [ExamController::class, 'update'])->whereNumber('exam');
     Route::delete('exams/{exam}', [ExamController::class, 'destroy'])->whereNumber('exam');
     Route::patch('exams/{exam}/publish', [ExamController::class, 'publish'])->whereNumber('exam');
+});
+
+Route::prefix('students/{student}')->group(function () {
+    Route::get('exams', [StudentExamController::class, 'index']);
 });
