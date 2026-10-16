@@ -17,6 +17,7 @@ function switchAccess() {
     <strong>Fênix</strong>
     <nav v-if="session.isTeacher" class="app-header__nav">
       <RouterLink :to="{ name: 'teacher-exams' }">Provas</RouterLink>
+      <RouterLink :to="{ name: 'teacher-dashboard' }">Dashboard</RouterLink>
     </nav>
     <nav v-if="session.isStudent" class="app-header__nav">
       <RouterLink :to="{ name: 'student-exams' }">Minhas provas</RouterLink>
