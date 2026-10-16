@@ -70,7 +70,8 @@ describe('StudentExamListView', () => {
 
     expect(card.classes()).toContain('card--answered')
     expect(card.text()).toContain('Nota: 4/5 (80%)')
-    expect(card.text()).toContain('Ver resultado')
+    expect(card.find('a').text()).toBe('Ver resultado')
+    expect(card.find('a').attributes('href')).toBe('/student/exams/3/result')
     expect(card.text()).not.toContain('Fazer prova')
   })
 

@@ -49,6 +49,7 @@ async function mountExam() {
   const wrapper = mount(TakeExamView, { props: { id: '10' }, global: { plugins: [router] } })
   await flushPromises()
 
+  wrapper.router = router
   return wrapper
 }
 
@@ -92,13 +93,13 @@ describe('TakeExamView', () => {
     expect(wrapper.findAll('.question')[0].findAll('.option')[1].classes()).toContain('option--selected')
   })
 
-  it('tells the student when the exam was already answered', async () => {
+  it('redirects to the result when the exam was already answered', async () => {
     getAvailableExam.mockResolvedValue(exam({ answered: true }))
 
     const wrapper = await mountExam()
 
-    expect(wrapper.text()).toContain('Você já respondeu esta prova.')
     expect(wrapper.find('.question').exists()).toBe(false)
+    await vi.waitFor(() => expect(wrapper.router.currentRoute.value.name).toBe('student-exam-result'))
   })
 
   it('shows not found for drafts or missing exams', async () => {
@@ -137,7 +138,7 @@ describe('TakeExamView', () => {
       expect(submitButton(wrapper).attributes('disabled')).toBeUndefined()
     })
 
-    it('asks for confirmation and shows the score', async () => {
+    it('asks for confirmation and opens the result', async () => {
       getAvailableExam.mockResolvedValue(exam())
       submitAttempt.mockResolvedValue({ id: 7, exam_id: 10, score: 2, total_questions: 2, percentage: '100.00' })
       const wrapper = await mountExam()
@@ -151,12 +152,11 @@ describe('TakeExamView', () => {
       await flushPromises()
 
       expect(submitAttempt).toHaveBeenCalledWith(3, '10', { 20: 32, 21: 33 })
-      expect(wrapper.text()).toContain('Prova enviada!')
-      expect(wrapper.text()).toContain('Você acertou 2 de 2 questões (100%)')
-      expect(wrapper.find('.question').exists()).toBe(false)
+      await vi.waitFor(() => expect(wrapper.router.currentRoute.value.name).toBe('student-exam-result'))
+      expect(wrapper.router.currentRoute.value.params.id).toBe('10')
     })
 
-    it('shows that the exam was already answered on 409', async () => {
+    it('opens the result on 409', async () => {
       getAvailableExam.mockResolvedValue(exam())
       submitAttempt.mockRejectedValue({ status: 409, message: 'Você já respondeu esta prova.', errors: {} })
       const wrapper = await mountExam()
@@ -166,8 +166,7 @@ describe('TakeExamView', () => {
       await wrapper.find('.dialog__confirm').trigger('click')
       await flushPromises()
 
-      expect(wrapper.text()).toContain('Você já respondeu esta prova.')
-      expect(wrapper.find('.question').exists()).toBe(false)
+      await vi.waitFor(() => expect(wrapper.router.currentRoute.value.name).toBe('student-exam-result'))
     })
 
     it('keeps the answers and shows the message on 422', async () => {

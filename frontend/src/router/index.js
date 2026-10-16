@@ -44,6 +44,13 @@ export const routes = [
     props: true,
     meta: { role: ROLES.STUDENT },
   },
+  {
+    path: '/student/exams/:id(\\d+)/result',
+    name: 'student-exam-result',
+    component: () => import('@/views/student/ExamResultView.vue'),
+    props: true,
+    meta: { role: ROLES.STUDENT },
+  },
   { path: '/:pathMatch(.*)*', redirect: { name: 'home' } },
 ]
 

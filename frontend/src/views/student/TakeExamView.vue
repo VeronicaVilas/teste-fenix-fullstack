@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
 import AlertMessage from '@/components/AlertMessage.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
@@ -11,6 +11,7 @@ const props = defineProps({
   id: { type: String, required: true },
 })
 
+const router = useRouter()
 const session = useSessionStore()
 
 const exam = ref(null)
@@ -21,7 +22,6 @@ const error = ref('')
 const confirmingSubmit = ref(false)
 const submitting = ref(false)
 const submitError = ref('')
-const result = ref(null)
 
 const letters = 'ABCDE'
 
@@ -29,8 +29,8 @@ const answeredCount = computed(() => Object.keys(answers).length)
 const totalQuestions = computed(() => exam.value?.questions.length ?? 0)
 const allAnswered = computed(() => totalQuestions.value > 0 && answeredCount.value === totalQuestions.value)
 
-function formatPercentage(value) {
-  return `${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`
+function goToResult() {
+  router.push({ name: 'student-exam-result', params: { id: props.id } })
 }
 
 async function confirmSubmit() {
@@ -38,10 +38,11 @@ async function confirmSubmit() {
   submitError.value = ''
 
   try {
-    result.value = await submitAttempt(session.userId, props.id, answers)
+    await submitAttempt(session.userId, props.id, answers)
+    goToResult()
   } catch (failure) {
     if (failure.status === 409) {
-      exam.value.answered = true
+      goToResult()
     } else {
       submitError.value = failure.message
     }
@@ -54,6 +55,10 @@ async function confirmSubmit() {
 onMounted(async () => {
   try {
     exam.value = await getAvailableExam(session.userId, props.id)
+
+    if (exam.value.answered) {
+      router.replace({ name: 'student-exam-result', params: { id: props.id } })
+    }
   } catch (failure) {
     if (failure.status === 404) {
       notFound.value = true
@@ -79,21 +84,7 @@ onMounted(async () => {
 
     <AlertMessage v-else-if="error" :message="error" />
 
-    <div v-else-if="result" class="take-exam__result">
-      <h1>Prova enviada!</h1>
-      <p class="take-exam__score">
-        Você acertou {{ result.score }} de {{ result.total_questions }} questões
-        ({{ formatPercentage(result.percentage) }}).
-      </p>
-      <RouterLink :to="{ name: 'student-exams' }" class="button button--primary">Voltar para minhas provas</RouterLink>
-    </div>
-
-    <div v-else-if="exam.answered" class="take-exam__state">
-      <p>Você já respondeu esta prova.</p>
-      <RouterLink :to="{ name: 'student-exams' }">Ir para minhas provas</RouterLink>
-    </div>
-
-    <template v-else>
+    <template v-else-if="!exam.answered">
       <header class="take-exam__header">
         <h1>{{ exam.title }}</h1>
         <p v-if="exam.description" class="take-exam__description">{{ exam.description }}</p>
@@ -219,33 +210,6 @@ onMounted(async () => {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 8px;
-}
-
-.take-exam__result {
-  padding: 2rem;
-  margin-top: 1rem;
-  text-align: center;
-  background: var(--color-surface);
-  border: 1px solid var(--color-success);
-  border-radius: 8px;
-}
-
-.take-exam__score {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--color-success);
-}
-
-.button {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  text-decoration: none;
-}
-
-.button--primary {
-  background: var(--color-primary);
-  color: #fff;
 }
 
 button {

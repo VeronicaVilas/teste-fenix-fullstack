@@ -62,7 +62,9 @@ onMounted(() => load())
               Nota: {{ exam.attempt.score }}/{{ exam.attempt.total_questions }}
               ({{ formatPercentage(exam.attempt.percentage) }})
             </span>
-            <button type="button" disabled title="Disponível em breve">Ver resultado</button>
+            <RouterLink :to="{ name: 'student-exam-result', params: { id: exam.id } }" class="button">
+              Ver resultado
+            </RouterLink>
           </template>
           <template v-else>
             <span class="card__pending">A fazer</span>
