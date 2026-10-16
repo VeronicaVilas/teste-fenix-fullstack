@@ -279,4 +279,43 @@ use OpenApi\Attributes as OA;
         ),
     ]
 )]
+#[OA\Schema(
+    schema: 'DashboardAttempt',
+    required: ['student_name', 'exam_title', 'score', 'total_questions', 'percentage', 'submitted_at'],
+    properties: [
+        new OA\Property(property: 'student_name', type: 'string', example: 'Ana Souza'),
+        new OA\Property(property: 'exam_title', type: 'string', example: 'Prova de Geografia'),
+        new OA\Property(property: 'score', type: 'integer', example: 5),
+        new OA\Property(property: 'total_questions', type: 'integer', example: 5),
+        new OA\Property(property: 'percentage', type: 'string', example: '100.00'),
+        new OA\Property(property: 'submitted_at', type: 'string', format: 'date-time'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'DashboardSummary',
+    required: ['exam_id', 'total_attempts', 'total_students', 'average_percentage', 'best', 'worst', 'exams'],
+    properties: [
+        new OA\Property(property: 'exam_id', type: 'integer', nullable: true, example: null),
+        new OA\Property(property: 'total_attempts', type: 'integer', example: 12),
+        new OA\Property(property: 'total_students', type: 'integer', example: 6),
+        new OA\Property(property: 'average_percentage', type: 'string', nullable: true, example: '71.25'),
+        new OA\Property(property: 'best', ref: '#/components/schemas/DashboardAttempt', nullable: true),
+        new OA\Property(property: 'worst', ref: '#/components/schemas/DashboardAttempt', nullable: true),
+        new OA\Property(
+            property: 'exams',
+            description: 'Todas as provas publicadas do professor, com a média de cada uma.',
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'id', type: 'integer', example: 3),
+                    new OA\Property(property: 'title', type: 'string', example: 'Prova de Geografia'),
+                    new OA\Property(property: 'attempts_count', type: 'integer', example: 6),
+                    new OA\Property(property: 'average_percentage', type: 'string', nullable: true, example: '76.67'),
+                    new OA\Property(property: 'best_percentage', type: 'string', nullable: true, example: '100.00'),
+                    new OA\Property(property: 'worst_percentage', type: 'string', nullable: true, example: '40.00'),
+                ]
+            )
+        ),
+    ]
+)]
 final class Schemas {}

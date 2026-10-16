@@ -181,6 +181,67 @@
                 }
             }
         },
+        "/teachers/{teacher}/dashboard": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Resumo de desempenho dos alunos",
+                "description": "Média, melhor (Top 1) e pior pontuação, totais e média por prova. Calculado no banco e guardado no Redis por 10 minutos, invalidado a cada nova tentativa, publicação ou exclusão.",
+                "operationId": "dashboardSummary",
+                "parameters": [
+                    {
+                        "name": "teacher",
+                        "in": "path",
+                        "description": "Id do professor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "exam_id",
+                        "in": "query",
+                        "description": "Filtra as métricas por uma prova do professor",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dashboard carregado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Dashboard carregado com sucesso."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/DashboardSummary"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
+                    }
+                }
+            }
+        },
         "/teachers/{teacher}/exams": {
             "get": {
                 "tags": [
@@ -1510,6 +1571,139 @@
                     }
                 },
                 "type": "object"
+            },
+            "DashboardAttempt": {
+                "required": [
+                    "student_name",
+                    "exam_title",
+                    "score",
+                    "total_questions",
+                    "percentage",
+                    "submitted_at"
+                ],
+                "properties": {
+                    "student_name": {
+                        "type": "string",
+                        "example": "Ana Souza"
+                    },
+                    "exam_title": {
+                        "type": "string",
+                        "example": "Prova de Geografia"
+                    },
+                    "score": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "total_questions": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "percentage": {
+                        "type": "string",
+                        "example": "100.00"
+                    },
+                    "submitted_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "DashboardSummary": {
+                "required": [
+                    "exam_id",
+                    "total_attempts",
+                    "total_students",
+                    "average_percentage",
+                    "best",
+                    "worst",
+                    "exams"
+                ],
+                "properties": {
+                    "exam_id": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "total_attempts": {
+                        "type": "integer",
+                        "example": 12
+                    },
+                    "total_students": {
+                        "type": "integer",
+                        "example": 6
+                    },
+                    "average_percentage": {
+                        "type": "string",
+                        "example": "71.25",
+                        "nullable": true
+                    },
+                    "best": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/DashboardAttempt"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true,
+                                "enum": [
+                                    null
+                                ]
+                            }
+                        ]
+                    },
+                    "worst": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/DashboardAttempt"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true,
+                                "enum": [
+                                    null
+                                ]
+                            }
+                        ]
+                    },
+                    "exams": {
+                        "description": "Todas as provas publicadas do professor, com a média de cada uma.",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 3
+                                },
+                                "title": {
+                                    "type": "string",
+                                    "example": "Prova de Geografia"
+                                },
+                                "attempts_count": {
+                                    "type": "integer",
+                                    "example": 6
+                                },
+                                "average_percentage": {
+                                    "type": "string",
+                                    "example": "76.67",
+                                    "nullable": true
+                                },
+                                "best_percentage": {
+                                    "type": "string",
+                                    "example": "100.00",
+                                    "nullable": true
+                                },
+                                "worst_percentage": {
+                                    "type": "string",
+                                    "example": "40.00",
+                                    "nullable": true
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
             }
         },
         "responses": {
@@ -1539,6 +1733,10 @@
         {
             "name": "Attempts",
             "description": "Attempts"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Dashboard"
         },
         {
             "name": "Exams (Professor)",
