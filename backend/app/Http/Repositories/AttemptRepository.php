@@ -14,4 +14,14 @@ class AttemptRepository implements AttemptRepositoryInterface
             ->where('student_id', $studentId)
             ->exists();
     }
+
+    public function create(array $data): Attempt
+    {
+        return Attempt::create($data);
+    }
+
+    public function createAnswers(Attempt $attempt, array $answers): void
+    {
+        $attempt->answers()->createMany($answers);
+    }
 }
