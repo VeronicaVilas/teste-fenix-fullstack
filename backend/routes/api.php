@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttemptController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentExamController;
@@ -22,6 +23,7 @@ Route::prefix('teachers/{teacher}')->group(function () {
     Route::put('exams/{exam}', [ExamController::class, 'update'])->whereNumber('exam');
     Route::delete('exams/{exam}', [ExamController::class, 'destroy'])->whereNumber('exam');
     Route::patch('exams/{exam}/publish', [ExamController::class, 'publish'])->whereNumber('exam');
+    Route::get('dashboard', [DashboardController::class, 'summary']);
 });
 
 Route::prefix('students/{student}')->group(function () {

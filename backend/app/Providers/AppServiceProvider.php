@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Enums\UserRole;
 use App\Http\Repositories\AttemptRepository;
+use App\Http\Repositories\DashboardRepository;
 use App\Http\Repositories\ExamRepository;
 use App\Http\Repositories\UserRepository;
 use App\Interfaces\AttemptRepositoryInterface;
+use App\Interfaces\DashboardRepositoryInterface;
 use App\Interfaces\ExamRepositoryInterface;
 use App\Interfaces\UserRepositoryInterface;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         UserRepositoryInterface::class => UserRepository::class,
         ExamRepositoryInterface::class => ExamRepository::class,
         AttemptRepositoryInterface::class => AttemptRepository::class,
+        DashboardRepositoryInterface::class => DashboardRepository::class,
     ];
 
     /**
