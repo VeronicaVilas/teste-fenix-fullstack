@@ -1,5 +1,11 @@
 <?php
 
+use App\Enums\ExamStatus;
+use App\Models\Exam;
+use App\Models\Option;
+use App\Models\Question;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 return [
@@ -131,6 +137,13 @@ return [
     |
     */
 
-    'serializable_classes' => false,
+    'serializable_classes' => [
+        Exam::class,
+        Question::class,
+        Option::class,
+        ExamStatus::class,
+        Collection::class,
+        Carbon::class,
+    ],
 
 ];
