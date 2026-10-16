@@ -28,7 +28,7 @@ class ExamController extends Controller
         $exams = $service->handle(
             $teacher,
             $request->enum('status', ExamStatus::class),
-            $request->integer('per_page', 10),
+            $request->perPage(),
         );
 
         return $this->paginated('Provas listadas com sucesso.', $exams, ExamSummaryResource::class);
