@@ -103,4 +103,13 @@ class ExamRepository implements ExamRepositoryInterface
             ->latest('id')
             ->paginate($perPage);
     }
+
+    public function findPublishedWithQuestions(int $examId): Exam
+    {
+        return Exam::query()
+            ->published()
+            ->with('questions.options')
+            ->withCount('questions')
+            ->findOrFail($examId);
+    }
 }

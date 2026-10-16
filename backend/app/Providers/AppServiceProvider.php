@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Enums\UserRole;
+use App\Http\Repositories\AttemptRepository;
 use App\Http\Repositories\ExamRepository;
 use App\Http\Repositories\UserRepository;
+use App\Interfaces\AttemptRepositoryInterface;
 use App\Interfaces\ExamRepositoryInterface;
 use App\Interfaces\UserRepositoryInterface;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
     public array $bindings = [
         UserRepositoryInterface::class => UserRepository::class,
         ExamRepositoryInterface::class => ExamRepository::class,
+        AttemptRepositoryInterface::class => AttemptRepository::class,
     ];
 
     /**
