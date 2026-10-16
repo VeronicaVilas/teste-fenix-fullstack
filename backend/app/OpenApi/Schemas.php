@@ -149,4 +149,35 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
     ]
 )]
+#[OA\Schema(
+    schema: 'AttemptSummary',
+    required: ['score', 'total_questions', 'percentage', 'submitted_at'],
+    properties: [
+        new OA\Property(property: 'score', type: 'integer', example: 4),
+        new OA\Property(property: 'total_questions', type: 'integer', example: 5),
+        new OA\Property(property: 'percentage', type: 'string', example: '80.00'),
+        new OA\Property(property: 'submitted_at', type: 'string', format: 'date-time'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'AvailableExam',
+    required: ['id', 'title', 'questions_count', 'published_at', 'answered', 'attempt'],
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 3),
+        new OA\Property(property: 'title', type: 'string', example: 'Prova de Geografia'),
+        new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Capitais e relevo'),
+        new OA\Property(property: 'questions_count', type: 'integer', example: 5),
+        new OA\Property(property: 'published_at', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'answered', type: 'boolean', example: true),
+        new OA\Property(property: 'attempt', ref: '#/components/schemas/AttemptSummary', nullable: true),
+    ]
+)]
+#[OA\Schema(
+    schema: 'PaginatedAvailableExam',
+    required: ['items', 'meta'],
+    properties: [
+        new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/AvailableExam')),
+        new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+    ]
+)]
 final class Schemas {}

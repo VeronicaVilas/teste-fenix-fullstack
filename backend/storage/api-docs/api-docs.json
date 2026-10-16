@@ -450,6 +450,79 @@
                 ]
             }
         },
+        "/students/{student}/exams": {
+            "get": {
+                "tags": [
+                    "Exams (Aluno)"
+                ],
+                "summary": "Lista as provas publicadas disponíveis para o aluno",
+                "description": "Mais recentes primeiro. Cada prova informa se este aluno já respondeu e, se sim, a nota.",
+                "operationId": "listAvailableExams",
+                "parameters": [
+                    {
+                        "name": "student",
+                        "in": "path",
+                        "description": "Id do aluno",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 50,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Provas disponíveis listadas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Provas disponíveis listadas com sucesso."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/PaginatedAvailableExam"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
+                    }
+                }
+            }
+        },
         "/teachers": {
             "get": {
                 "tags": [
@@ -887,6 +960,103 @@
                     }
                 },
                 "type": "object"
+            },
+            "AttemptSummary": {
+                "required": [
+                    "score",
+                    "total_questions",
+                    "percentage",
+                    "submitted_at"
+                ],
+                "properties": {
+                    "score": {
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "total_questions": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "percentage": {
+                        "type": "string",
+                        "example": "80.00"
+                    },
+                    "submitted_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "AvailableExam": {
+                "required": [
+                    "id",
+                    "title",
+                    "questions_count",
+                    "published_at",
+                    "answered",
+                    "attempt"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Prova de Geografia"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Capitais e relevo",
+                        "nullable": true
+                    },
+                    "questions_count": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "published_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "answered": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "attempt": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/AttemptSummary"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true,
+                                "enum": [
+                                    null
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatedAvailableExam": {
+                "required": [
+                    "items",
+                    "meta"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AvailableExam"
+                        }
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                },
+                "type": "object"
             }
         },
         "responses": {
@@ -920,6 +1090,10 @@
         {
             "name": "Health",
             "description": "Health"
+        },
+        {
+            "name": "Exams (Aluno)",
+            "description": "Exams (Aluno)"
         },
         {
             "name": "Users",
