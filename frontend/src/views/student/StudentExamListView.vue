@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import AlertMessage from '@/components/AlertMessage.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
@@ -65,7 +66,9 @@ onMounted(() => load())
           </template>
           <template v-else>
             <span class="card__pending">A fazer</span>
-            <button type="button" class="primary" disabled title="Disponível em breve">Fazer prova</button>
+            <RouterLink :to="{ name: 'student-exam-take', params: { id: exam.id } }" class="button button--primary">
+              Fazer prova
+            </RouterLink>
           </template>
         </div>
       </li>
@@ -137,16 +140,19 @@ onMounted(() => load())
   font-weight: 600;
 }
 
-button {
+button,
+.button {
   padding: 0.4rem 0.8rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 6px;
   cursor: pointer;
   font: inherit;
+  color: inherit;
+  text-decoration: none;
 }
 
-button.primary {
+.button--primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: #fff;

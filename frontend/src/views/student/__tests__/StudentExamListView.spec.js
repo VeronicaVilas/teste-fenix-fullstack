@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 import StudentExamListView from '../StudentExamListView.vue'
+import { routes } from '@/router'
 import { listAvailableExams } from '@/services/studentExamService'
 import { ROLES, useSessionStore } from '@/stores/session'
 
@@ -33,7 +35,11 @@ function page(items, meta = {}) {
 }
 
 async function mountList() {
-  const wrapper = mount(StudentExamListView)
+  const router = createRouter({ history: createMemoryHistory(), routes })
+  router.push('/student/exams')
+  await router.isReady()
+
+  const wrapper = mount(StudentExamListView, { global: { plugins: [router] } })
   await flushPromises()
   return wrapper
 }
@@ -74,7 +80,8 @@ describe('StudentExamListView', () => {
     const card = (await mountList()).find('.card')
 
     expect(card.text()).toContain('A fazer')
-    expect(card.text()).toContain('Fazer prova')
+    expect(card.find('a').text()).toBe('Fazer prova')
+    expect(card.find('a').attributes('href')).toBe('/student/exams/4')
   })
 
   it('loads another page', async () => {
