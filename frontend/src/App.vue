@@ -18,6 +18,9 @@ function switchAccess() {
     <nav v-if="session.isTeacher" class="app-header__nav">
       <RouterLink :to="{ name: 'teacher-exams' }">Provas</RouterLink>
     </nav>
+    <nav v-if="session.isStudent" class="app-header__nav">
+      <RouterLink :to="{ name: 'student-exams' }">Minhas provas</RouterLink>
+    </nav>
     <div v-if="session.role" class="app-header__session">
       <span>Acessando como: {{ session.name }} ({{ session.roleLabel }})</span>
       <button type="button" @click="switchAccess">Trocar acesso</button>
