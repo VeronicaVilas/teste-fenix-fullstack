@@ -102,4 +102,23 @@ describe('QuestionEditor', () => {
 
     expect(wrapper.emitted('remove')).toHaveLength(1)
   })
+
+  it('uses icon-only buttons to remove the question and its options', () => {
+    const wrapper = mountEditor({ removable: true })
+    const removeQuestion = wrapper.find('[aria-label="Remover questão"]')
+    const removeOption = wrapper.find('[aria-label="Remover alternativa A"]')
+
+    expect(removeQuestion.find('svg').exists()).toBe(true)
+    expect(removeQuestion.text()).toBe('')
+    expect(removeOption.find('svg').exists()).toBe(true)
+    expect(removeOption.text()).toBe('')
+  })
+
+  it('highlights the correct option', () => {
+    const options = mountEditor().findAll('.option')
+
+    expect(options.map((option) => option.classes('option--correct'))).toEqual(
+      mountEditor().props('modelValue').options.map((option) => option.is_correct),
+    )
+  })
 })

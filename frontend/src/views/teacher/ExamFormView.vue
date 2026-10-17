@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { ArrowLeft, Plus, Save } from 'lucide-vue-next'
 
 import AlertMessage from '@/components/AlertMessage.vue'
 import QuestionEditor from '@/components/QuestionEditor.vue'
@@ -134,9 +135,19 @@ onMounted(() => {
 
 <template>
   <section class="exam-form">
-    <header class="exam-form__header">
-      <h1>{{ isEditing ? 'Editar prova' : 'Nova prova' }}</h1>
-      <RouterLink :to="isEditing ? { name: 'teacher-exam-detail', params: { id } } : { name: 'teacher-exams' }">
+    <header class="page-header">
+      <div>
+        <h1>{{ isEditing ? 'Editar prova' : 'Criar prova' }}</h1>
+        <p class="page-header__subtitle">
+          {{ isEditing ? 'Ajuste o rascunho antes de publicar.' : 'Monte as questões e marque a alternativa correta de cada uma.' }}
+        </p>
+      </div>
+
+      <RouterLink
+        :to="isEditing ? { name: 'teacher-exam-detail', params: { id } } : { name: 'teacher-exams' }"
+        class="button-secondary"
+      >
+        <ArrowLeft aria-hidden="true" />
         Voltar
       </RouterLink>
     </header>
@@ -151,34 +162,54 @@ onMounted(() => {
     </div>
 
     <form v-else novalidate @submit.prevent="submit">
-      <label class="field">
-        <span>Título</span>
-        <input v-model="form.title" type="text" maxlength="255" placeholder="Ex.: Prova de Geografia" />
-        <small v-if="errorFor('title')" class="field__error">{{ errorFor('title') }}</small>
-      </label>
+      <div class="panel">
+        <header class="panel__header">
+          <h2>Informações da prova</h2>
+          <p>Título e uma descrição opcional para os alunos.</p>
+        </header>
 
-      <label class="field">
-        <span>Descrição (opcional)</span>
-        <textarea v-model="form.description" rows="2" maxlength="2000" />
-        <small v-if="errorFor('description')" class="field__error">{{ errorFor('description') }}</small>
-      </label>
+        <label class="field">
+          <span>Título</span>
+          <input v-model="form.title" type="text" maxlength="255" placeholder="Ex.: Prova de Geografia" />
+          <small v-if="errorFor('title')" class="field__error">{{ errorFor('title') }}</small>
+        </label>
 
-      <h2>Questões</h2>
-      <small v-if="errorFor('questions')" class="field__error">{{ errorFor('questions') }}</small>
+        <label class="field">
+          <span>Descrição (opcional)</span>
+          <textarea v-model="form.description" rows="3" maxlength="2000" placeholder="Instruções ou assuntos cobrados" />
+          <small v-if="errorFor('description')" class="field__error">{{ errorFor('description') }}</small>
+        </label>
+      </div>
 
-      <QuestionEditor
-        v-for="(question, index) in form.questions"
-        :key="index"
-        v-model="form.questions[index]"
-        :number="index + 1"
-        :errors="questionErrors(index)"
-        :removable="form.questions.length > 1"
-        @remove="removeQuestion(index)"
-      />
+      <div class="panel">
+        <header class="panel__header panel__header--row">
+          <div>
+            <h2>Questões</h2>
+            <p>De 2 a 5 alternativas por questão, com apenas uma correta.</p>
+          </div>
+          <span class="panel__count">{{ form.questions.length }} {{ form.questions.length === 1 ? 'questão' : 'questões' }}</span>
+        </header>
+
+        <small v-if="errorFor('questions')" class="field__error">{{ errorFor('questions') }}</small>
+
+        <QuestionEditor
+          v-for="(question, index) in form.questions"
+          :key="index"
+          v-model="form.questions[index]"
+          :number="index + 1"
+          :errors="questionErrors(index)"
+          :removable="form.questions.length > 1"
+          @remove="removeQuestion(index)"
+        />
+      </div>
 
       <div class="exam-form__actions">
-        <button type="button" @click="addQuestion">+ Questão</button>
+        <button type="button" class="button-outline" @click="addQuestion">
+          <Plus aria-hidden="true" />
+          Questão
+        </button>
         <button type="submit" class="primary" :disabled="saving">
+          <Save aria-hidden="true" />
           {{ saving ? 'Salvando...' : 'Salvar prova' }}
         </button>
       </div>
@@ -187,31 +218,132 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.exam-form__header {
+.page-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--color-navy);
+}
+
+.page-header__subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--color-muted);
+}
+
+.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-navy);
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.button-secondary:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.button-secondary svg,
+button svg {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .exam-form__state {
   padding: 2rem;
   text-align: center;
   color: var(--color-muted);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+
+.panel__header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--color-navy);
+}
+
+.panel__header p {
+  margin: 0.3rem 0 0;
+  color: var(--color-muted);
+}
+
+.panel__header--row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel__count {
+  padding: 0.4rem 0.85rem;
+  background: var(--color-primary-soft);
+  border-radius: 999px;
+  color: var(--color-primary-dark);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 1rem;
+  gap: 0.4rem;
+}
+
+.field span {
+  color: var(--color-navy);
+  font-weight: 600;
 }
 
 .field input,
 .field textarea {
-  padding: 0.5rem;
+  padding: 0.75rem 0.85rem;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: 12px;
+  color: var(--color-text);
   font: inherit;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--color-primary);
+  outline: none;
 }
 
 .field__error {
@@ -221,22 +353,44 @@ onMounted(() => {
 .exam-form__actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 1rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 button {
-  padding: 0.5rem 1rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
   font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.button-outline {
+  background: var(--color-surface);
+  border: 1px dashed var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.button-outline:hover {
+  background: var(--color-primary-soft);
 }
 
 button.primary {
   background: var(--color-primary);
-  border-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
   color: #fff;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--color-primary-dark);
 }
 
 button:disabled {
