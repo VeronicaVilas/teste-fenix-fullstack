@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 import DashboardView from '../DashboardView.vue'
+import { routes } from '@/router'
 import { getDashboardSummary } from '@/services/dashboardService'
+import { listExams } from '@/services/examService'
+import { listStudents } from '@/services/userService'
 import { ROLES, useSessionStore } from '@/stores/session'
 
 vi.mock('@/services/dashboardService', () => ({
@@ -13,6 +17,8 @@ vi.mock('@/services/dashboardService', () => ({
     meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 },
   }),
 }))
+vi.mock('@/services/examService', () => ({ listExams: vi.fn() }))
+vi.mock('@/services/userService', () => ({ listStudents: vi.fn() }))
 
 const exams = [
   { id: 10, title: 'Prova de Geografia', attempts_count: 3, average_percentage: '66.67', best_percentage: '100.00', worst_percentage: '33.33' },
@@ -23,16 +29,26 @@ const summary = {
   exam_id: null,
   total_attempts: 3,
   total_students: 3,
-  average_percentage: '66.67',
+  average_percentage: '71.25',
   best: { student_name: 'Ana Souza', exam_title: 'Prova de Geografia', score: 3, total_questions: 3, percentage: '100.00' },
   worst: { student_name: 'Bruno Lima', exam_title: 'Prova de Geografia', score: 1, total_questions: 3, percentage: '33.33' },
+  top_student: { student_name: 'Ana Souza', exams_count: 2, total_grade: '18.50' },
   exams,
 }
 
 async function mountDashboard() {
-  const wrapper = mount(DashboardView)
+  const router = createRouter({ history: createMemoryHistory(), routes })
+  router.push('/teacher/dashboard')
+  await router.isReady()
+
+  const wrapper = mount(DashboardView, { global: { plugins: [router] } })
   await flushPromises()
+
   return wrapper
+}
+
+function stat(wrapper, modifier) {
+  return wrapper.find(`.stat--${modifier}`)
 }
 
 describe('DashboardView', () => {
@@ -41,24 +57,47 @@ describe('DashboardView', () => {
     setActivePinia(createPinia())
     useSessionStore().enterAs(ROLES.TEACHER, { id: 1, name: 'Professor Fênix' })
     vi.clearAllMocks()
+    getDashboardSummary.mockResolvedValue(summary)
+    listExams.mockResolvedValue({ items: [], meta: { current_page: 1, last_page: 1, per_page: 10, total: 5 } })
+    listStudents.mockResolvedValue(Array.from({ length: 6 }, (_, index) => ({ id: index + 2, name: `Aluno ${index}` })))
   })
 
-  it('shows the class average, best and worst scores', async () => {
-    getDashboardSummary.mockResolvedValue(summary)
-
+  it('shows the page header with the create exam button', async () => {
     const wrapper = await mountDashboard()
 
-    expect(getDashboardSummary).toHaveBeenCalledWith(1, null)
-    expect(wrapper.find('.card--average .card__value').text()).toBe('66,67%')
-    expect(wrapper.find('.card--best').text()).toContain('100%')
-    expect(wrapper.find('.card--best').text()).toContain('Ana Souza')
-    expect(wrapper.find('.card--worst').text()).toContain('Bruno Lima')
-    expect(wrapper.find('.card--worst').text()).toContain('1/3 acertos')
+    expect(wrapper.find('h1').text()).toBe('Dashboard')
+    expect(wrapper.find('.page-header__subtitle').text()).toBe('Acompanhe suas provas e o desempenho da turma.')
+    expect(wrapper.find('.button-primary').text()).toBe('Criar nova prova')
+    expect(wrapper.find('.button-primary').attributes('href')).toBe('/teacher/exams/new')
+  })
+
+  it('loads the summary for all exams', async () => {
+    await mountDashboard()
+
+    expect(getDashboardSummary).toHaveBeenCalledWith(1)
+  })
+
+  it('shows created exams and students counts', async () => {
+    const wrapper = await mountDashboard()
+
+    expect(listExams).toHaveBeenCalledWith(1)
+    expect(stat(wrapper, 'exams').find('.stat__value').text()).toBe('5')
+    expect(stat(wrapper, 'students').find('.stat__value').text()).toBe('6')
+  })
+
+  it('shows the class average as a grade from 0 to 10', async () => {
+    const wrapper = await mountDashboard()
+
+    expect(stat(wrapper, 'average').find('.stat__value').text()).toBe('7,1')
+  })
+
+  it('shows the global top student', async () => {
+    const wrapper = await mountDashboard()
+
+    expect(stat(wrapper, 'top').find('.stat__value').text()).toBe('Ana Souza')
   })
 
   it('lists the average of each exam', async () => {
-    getDashboardSummary.mockResolvedValue(summary)
-
     const rows = (await mountDashboard()).findAll('tbody tr')
 
     expect(rows).toHaveLength(2)
@@ -67,21 +106,7 @@ describe('DashboardView', () => {
     expect(rows[1].findAll('td')[2].text()).toBe('—')
   })
 
-  it('filters by exam using the exams of the response', async () => {
-    getDashboardSummary.mockResolvedValue(summary)
-    const wrapper = await mountDashboard()
-
-    const options = wrapper.findAll('.dashboard__filter option')
-    expect(options.map((option) => option.text())).toEqual(['Todas', 'Prova de Geografia', 'Prova de História'])
-
-    await wrapper.find('.dashboard__filter select').setValue(10)
-    await flushPromises()
-
-    expect(getDashboardSummary).toHaveBeenLastCalledWith(1, 10)
-    expect(wrapper.find('tbody tr').classes()).toContain('selected')
-  })
-
-  it('shows the empty state without attempts', async () => {
+  it('shows empty metrics without attempts', async () => {
     getDashboardSummary.mockResolvedValue({
       ...summary,
       total_attempts: 0,
@@ -89,12 +114,14 @@ describe('DashboardView', () => {
       average_percentage: null,
       best: null,
       worst: null,
+      top_student: null,
     })
 
     const wrapper = await mountDashboard()
 
     expect(wrapper.text()).toContain('Ainda não há tentativas.')
-    expect(wrapper.find('.cards').exists()).toBe(false)
+    expect(stat(wrapper, 'average').find('.stat__value').text()).toBe('—')
+    expect(stat(wrapper, 'top').find('.stat__value').text()).toBe('—')
   })
 
   it('shows the API error', async () => {
