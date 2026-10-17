@@ -4,7 +4,8 @@ import { RouterLink } from 'vue-router'
 import { ClipboardList, GraduationCap, Plus, Trophy, Users } from 'lucide-vue-next'
 
 import AlertMessage from '@/components/AlertMessage.vue'
-import RankingGrid from '@/components/RankingGrid.vue'
+import ExamAveragesPanel from '@/components/ExamAveragesPanel.vue'
+import ExamRankingPanel from '@/components/ExamRankingPanel.vue'
 import { getDashboardSummary } from '@/services/dashboardService'
 import { listExams } from '@/services/examService'
 import { listStudents } from '@/services/userService'
@@ -53,10 +54,6 @@ function formatNumber(value, digits = 1) {
   return value === null || value === undefined
     ? '—'
     : Number(value).toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits })
-}
-
-function formatPercentage(value) {
-  return value === null ? '—' : `${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`
 }
 
 onMounted(() => {
@@ -122,30 +119,10 @@ onMounted(() => {
         Ainda não há tentativas. Publique uma prova e peça aos alunos para respondê-la.
       </p>
 
-      <h2 class="dashboard__section">Média por prova</h2>
-      <p v-if="exams.length === 0" class="dashboard__state">Nenhuma prova publicada.</p>
-      <table v-else>
-        <thead>
-          <tr>
-            <th>Prova</th>
-            <th>Tentativas</th>
-            <th>Média</th>
-            <th>Melhor</th>
-            <th>Pior</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="exam in exams" :key="exam.id">
-            <td>{{ exam.title }}</td>
-            <td>{{ exam.attempts_count }}</td>
-            <td>{{ formatPercentage(exam.average_percentage) }}</td>
-            <td>{{ formatPercentage(exam.best_percentage) }}</td>
-            <td>{{ formatPercentage(exam.worst_percentage) }}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <RankingGrid />
+      <div class="panels">
+        <ExamAveragesPanel :exams="exams" />
+        <ExamRankingPanel />
+      </div>
     </template>
   </section>
 </template>
@@ -275,26 +252,16 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.dashboard__section {
-  margin-top: 2rem;
-  color: var(--color-navy);
+.panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: start;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-}
-
-th,
-td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid var(--color-border);
-}
-
-th {
-  color: var(--color-muted);
+@media (max-width: 1100px) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
