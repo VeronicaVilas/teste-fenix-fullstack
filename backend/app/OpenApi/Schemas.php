@@ -302,6 +302,17 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'best', ref: '#/components/schemas/DashboardAttempt', nullable: true),
         new OA\Property(property: 'worst', ref: '#/components/schemas/DashboardAttempt', nullable: true),
         new OA\Property(
+            property: 'top_student',
+            description: 'Aluno com a maior soma de notas (0 a 10 por prova) em todas as provas do professor.',
+            properties: [
+                new OA\Property(property: 'student_name', type: 'string', example: 'Ana Souza'),
+                new OA\Property(property: 'exams_count', type: 'integer', example: 2),
+                new OA\Property(property: 'total_grade', type: 'string', example: '18.50'),
+            ],
+            type: 'object',
+            nullable: true
+        ),
+        new OA\Property(
             property: 'exams',
             description: 'Todas as provas publicadas do professor, com a média de cada uma.',
             type: 'array',
