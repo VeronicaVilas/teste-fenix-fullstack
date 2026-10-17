@@ -75,6 +75,25 @@ describe('ExamResultView', () => {
     expect(wrapper.find('.summary__bar span').attributes('style')).toContain('width: 50%')
   })
 
+  it('shows the grade, percentage, right and wrong answers as stat cards', async () => {
+    getAttemptResult.mockResolvedValue(result)
+
+    const stats = (await mountResult()).findAll('.stat')
+
+    expect(stats.map((stat) => [stat.find('h2').text(), stat.find('.stat__value').text()])).toEqual([
+      ['Nota', '5,0'],
+      ['Aproveitamento', '50%'],
+      ['Acertos', '1'],
+      ['Erros', '1'],
+    ])
+  })
+
+  it('links back to the student exams', async () => {
+    getAttemptResult.mockResolvedValue(result)
+
+    expect((await mountResult()).find('.button-secondary').attributes('href')).toBe('/student/exams')
+  })
+
   it('highlights the wrong answer and the correct one', async () => {
     getAttemptResult.mockResolvedValue(result)
 

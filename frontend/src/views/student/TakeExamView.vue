@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { ArrowLeft, Send } from 'lucide-vue-next'
 
 import AlertMessage from '@/components/AlertMessage.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
@@ -28,6 +29,7 @@ const letters = 'ABCDE'
 const answeredCount = computed(() => Object.keys(answers).length)
 const totalQuestions = computed(() => exam.value?.questions.length ?? 0)
 const allAnswered = computed(() => totalQuestions.value > 0 && answeredCount.value === totalQuestions.value)
+const progress = computed(() => (totalQuestions.value === 0 ? 0 : (answeredCount.value / totalQuestions.value) * 100))
 
 function goToResult() {
   router.push({ name: 'student-exam-result', params: { id: props.id } })
@@ -73,8 +75,6 @@ onMounted(async () => {
 
 <template>
   <section class="take-exam">
-    <RouterLink :to="{ name: 'student-exams' }" class="take-exam__back">← Voltar para minhas provas</RouterLink>
-
     <p v-if="loading" class="take-exam__state">Carregando prova...</p>
 
     <div v-else-if="notFound" class="take-exam__state">
@@ -85,17 +85,27 @@ onMounted(async () => {
     <AlertMessage v-else-if="error" :message="error" />
 
     <template v-else-if="!exam.answered">
-      <header class="take-exam__header">
-        <h1>{{ exam.title }}</h1>
-        <p v-if="exam.description" class="take-exam__description">{{ exam.description }}</p>
+      <header class="page-header">
+        <div class="page-header__text">
+          <h1>{{ exam.title }}</h1>
+          <p v-if="exam.description" class="page-header__subtitle">{{ exam.description }}</p>
+        </div>
+
+        <RouterLink :to="{ name: 'student-exams' }" class="button-secondary">
+          <ArrowLeft aria-hidden="true" />
+          Voltar
+        </RouterLink>
       </header>
 
       <AlertMessage type="info" message="Você só pode enviar esta prova uma vez." />
 
       <ol class="questions">
-        <li v-for="question in exam.questions" :key="question.id" class="question">
+        <li v-for="(question, questionIndex) in exam.questions" :key="question.id" class="question">
           <fieldset>
-            <legend>{{ question.statement }}</legend>
+            <legend>
+              <span class="question__number">Questão {{ questionIndex + 1 }}</span>
+              <span class="question__statement">{{ question.statement }}</span>
+            </legend>
             <label
               v-for="(option, index) in question.options"
               :key="option.id"
@@ -104,7 +114,7 @@ onMounted(async () => {
             >
               <input v-model="answers[question.id]" type="radio" :name="`question-${question.id}`" :value="option.id" />
               <span class="option__letter">{{ letters[index] }}</span>
-              <span>{{ option.text }}</span>
+              <span class="option__text">{{ option.text }}</span>
             </label>
           </fieldset>
         </li>
@@ -113,7 +123,12 @@ onMounted(async () => {
       <AlertMessage :message="submitError" />
 
       <footer class="take-exam__footer">
-        <span>Respondidas: {{ answeredCount }} de {{ totalQuestions }}</span>
+        <div class="take-exam__progress">
+          <span>Respondidas: {{ answeredCount }} de {{ totalQuestions }}</span>
+          <div class="progress" role="progressbar" :aria-valuenow="progress" aria-valuemin="0" aria-valuemax="100">
+            <span :style="{ width: `${progress}%` }" />
+          </div>
+        </div>
         <button
           type="button"
           class="primary"
@@ -121,6 +136,7 @@ onMounted(async () => {
           :title="allAnswered ? 'Enviar respostas' : 'Responda todas as questões para enviar'"
           @click="confirmingSubmit = true"
         >
+          <Send aria-hidden="true" />
           {{ submitting ? 'Corrigindo...' : 'Enviar prova' }}
         </button>
       </footer>
@@ -139,95 +155,243 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.take-exam__back {
-  color: var(--color-muted);
-  text-decoration: none;
-}
-
 .take-exam__state {
   padding: 2rem;
   text-align: center;
   color: var(--color-muted);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
 }
 
-.take-exam__header h1 {
-  margin: 1rem 0 0.25rem;
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
 }
 
-.take-exam__description {
-  margin: 0 0 1rem;
+.page-header__text {
+  min-width: 0;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--color-navy);
+}
+
+.page-header__subtitle {
+  margin: 0.35rem 0 0;
   color: var(--color-muted);
 }
 
+.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-navy);
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.button-secondary:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.button-secondary svg,
+button svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
 .questions {
-  padding-left: 1.25rem;
   display: grid;
   gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .question fieldset {
   margin: 0;
-  padding: 1rem;
+  padding: 1.5rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-left: 4px solid var(--color-primary);
+  border-radius: 16px;
 }
 
 .question legend {
-  font-weight: 600;
+  float: left;
+  width: 100%;
+  margin-bottom: 1rem;
   padding: 0;
-  margin-bottom: 0.75rem;
+}
+
+.question legend + * {
+  clear: both;
+}
+
+.question__number {
+  display: block;
+  color: var(--color-primary-dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.question__statement {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--color-navy);
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .option {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 0.4rem;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.5rem;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 }
 
-.option--selected {
+.option:last-child {
+  margin-bottom: 0;
+}
+
+.option:hover {
   border-color: var(--color-primary);
-  background: #fff4e6;
+}
+
+.option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .option__letter {
-  font-weight: 600;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  background: #e8edf7;
+  border-radius: 8px;
+  color: var(--color-navy);
+  font-weight: 700;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.option__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.option--selected {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
+.option--selected .option__letter {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.option:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .take-exam__footer {
   position: sticky;
-  bottom: 0;
+  bottom: 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
-  margin-top: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.5rem;
+  margin-top: 1.25rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 30, 61, 0.12);
+}
+
+.take-exam__progress {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 180px;
+  max-width: 360px;
+  color: var(--color-navy);
+  font-weight: 600;
+}
+
+.progress {
+  height: 6px;
+  background: var(--color-primary-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), #fdba74);
+  border-radius: 999px;
+  transition: width 0.3s ease;
 }
 
 button {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 12px;
   font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 button.primary {
   background: var(--color-primary);
-  border-color: var(--color-primary);
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
   color: #fff;
+  transition: background 0.2s ease;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--color-primary-dark);
 }
 
 button:disabled {
   opacity: 0.5;
+  box-shadow: none;
   cursor: not-allowed;
 }
 </style>

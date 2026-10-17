@@ -91,6 +91,15 @@ describe('TakeExamView', () => {
 
     expect(wrapper.text()).toContain('Respondidas: 1 de 2')
     expect(wrapper.findAll('.question')[0].findAll('.option')[1].classes()).toContain('option--selected')
+    expect(wrapper.find('.progress span').attributes('style')).toContain('width: 50%')
+  })
+
+  it('numbers the questions and links back to the student exams', async () => {
+    getAvailableExam.mockResolvedValue(exam())
+    const wrapper = await mountExam()
+
+    expect(wrapper.findAll('.question__number').map((number) => number.text())).toEqual(['Questão 1', 'Questão 2'])
+    expect(wrapper.find('.button-secondary').attributes('href')).toBe('/student/exams')
   })
 
   it('redirects to the result when the exam was already answered', async () => {

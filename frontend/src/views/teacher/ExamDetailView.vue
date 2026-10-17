@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { ArrowLeft, CalendarCheck, Check, FileQuestion, Pencil, Send, Trash2, Users } from 'lucide-vue-next'
 
 import AlertMessage from '@/components/AlertMessage.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
@@ -60,7 +61,7 @@ async function confirmDelete() {
 }
 
 function formatDate(value) {
-  return value ? new Date(value).toLocaleString('pt-BR') : '—'
+  return value ? new Date(value).toLocaleDateString('pt-BR') : '—'
 }
 
 onMounted(async () => {
@@ -80,8 +81,6 @@ onMounted(async () => {
 
 <template>
   <section class="exam-detail">
-    <RouterLink :to="{ name: 'teacher-exams' }" class="exam-detail__back">← Voltar para provas</RouterLink>
-
     <p v-if="loading" class="exam-detail__state">Carregando prova...</p>
 
     <div v-else-if="notFound" class="exam-detail__state">
@@ -92,61 +91,107 @@ onMounted(async () => {
     <AlertMessage v-else-if="error && !exam" :message="error" />
 
     <template v-if="exam">
-      <AlertMessage :message="error" />
-      <AlertMessage :message="success" type="success" />
-
-      <header class="exam-detail__header">
-        <div>
+      <header class="page-header">
+        <div class="page-header__text">
           <h1>{{ exam.title }}</h1>
-          <p v-if="exam.description" class="exam-detail__description">{{ exam.description }}</p>
-          <p class="exam-detail__meta">
-            <StatusBadge :status="exam.status" />
-            <span>{{ exam.questions_count }} questões</span>
-            <span>{{ exam.attempts_count }} tentativas</span>
-            <span v-if="exam.published_at">Publicada em {{ formatDate(exam.published_at) }}</span>
-          </p>
+          <p v-if="exam.description" class="page-header__subtitle">{{ exam.description }}</p>
         </div>
 
         <div class="exam-detail__actions">
+          <RouterLink :to="{ name: 'teacher-exams' }" class="button-secondary">
+            <ArrowLeft aria-hidden="true" />
+            Voltar
+          </RouterLink>
           <template v-if="isDraft">
-            <RouterLink :to="{ name: 'teacher-exam-edit', params: { id: exam.id } }" class="button">Editar</RouterLink>
-            <button type="button" @click="confirmingPublish = true">Publicar</button>
+            <button type="button" class="publish" @click="confirmingPublish = true">
+              <Send aria-hidden="true" />
+              Publicar
+            </button>
+            <RouterLink
+              :to="{ name: 'teacher-exam-edit', params: { id: exam.id } }"
+              class="icon-button"
+              title="Editar prova"
+              aria-label="Editar prova"
+            >
+              <Pencil aria-hidden="true" />
+            </RouterLink>
           </template>
           <button
             type="button"
-            class="danger"
+            class="icon-button danger"
             :disabled="exam.attempts_count > 0"
             :title="exam.attempts_count > 0 ? 'Prova já respondida por alunos' : 'Excluir prova'"
+            aria-label="Excluir prova"
             @click="confirmingDelete = true"
           >
-            Excluir
+            <Trash2 aria-hidden="true" />
           </button>
         </div>
       </header>
 
-      <AlertMessage
-        v-if="!isDraft"
-        type="info"
-        message="Prova publicada: não pode mais ser editada."
-      />
+      <AlertMessage :message="error" />
+      <AlertMessage :message="success" type="success" />
+      <AlertMessage v-if="!isDraft" type="info" message="Prova publicada: não pode mais ser editada." />
 
-      <ol class="questions">
-        <li v-for="question in exam.questions" :key="question.id" class="question">
-          <p class="question__statement">{{ question.statement }}</p>
-          <ul class="options">
-            <li
-              v-for="(option, index) in question.options"
-              :key="option.id"
-              class="option"
-              :class="{ 'option--correct': option.is_correct }"
-            >
-              <span class="option__letter">{{ letters[index] }}</span>
-              <span>{{ option.text }}</span>
-              <span v-if="option.is_correct" class="option__mark" aria-label="Alternativa correta">✓ Correta</span>
-            </li>
-          </ul>
-        </li>
-      </ol>
+      <div class="stats">
+        <article class="stat stat--status">
+          <span class="stat__icon"><Check aria-hidden="true" /></span>
+          <div class="stat__body">
+            <h2>Status</h2>
+            <p class="stat__value"><StatusBadge :status="exam.status" /></p>
+          </div>
+        </article>
+
+        <article class="stat stat--questions">
+          <span class="stat__icon"><FileQuestion aria-hidden="true" /></span>
+          <div class="stat__body">
+            <h2>Questões</h2>
+            <p class="stat__value">{{ exam.questions_count }}</p>
+          </div>
+        </article>
+
+        <article class="stat stat--attempts">
+          <span class="stat__icon"><Users aria-hidden="true" /></span>
+          <div class="stat__body">
+            <h2>Tentativas</h2>
+            <p class="stat__value">{{ exam.attempts_count }}</p>
+          </div>
+        </article>
+
+        <article class="stat stat--published">
+          <span class="stat__icon"><CalendarCheck aria-hidden="true" /></span>
+          <div class="stat__body">
+            <h2>Publicada em</h2>
+            <p class="stat__value">{{ formatDate(exam.published_at) }}</p>
+          </div>
+        </article>
+      </div>
+
+      <section class="panel">
+        <header class="panel__header">
+          <h2>Questões</h2>
+          <p>A alternativa correta de cada questão aparece em verde.</p>
+        </header>
+
+        <ol class="questions">
+          <li v-for="(question, questionIndex) in exam.questions" :key="question.id" class="question">
+            <span class="question__number">Questão {{ questionIndex + 1 }}</span>
+            <p class="question__statement">{{ question.statement }}</p>
+            <ul class="options">
+              <li
+                v-for="(option, index) in question.options"
+                :key="option.id"
+                class="option"
+                :class="{ 'option--correct': option.is_correct }"
+              >
+                <span class="option__letter">{{ letters[index] }}</span>
+                <span class="option__text">{{ option.text }}</span>
+                <span v-if="option.is_correct" class="option__mark" aria-label="Alternativa correta">✓ Correta</span>
+              </li>
+            </ul>
+          </li>
+        </ol>
+      </section>
     </template>
 
     <ConfirmDialog
@@ -173,116 +218,290 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.exam-detail__back {
-  color: var(--color-muted);
-  text-decoration: none;
-}
-
 .exam-detail__state {
   padding: 2rem;
   text-align: center;
   color: var(--color-muted);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
 }
 
-.exam-detail__header {
+.page-header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
-  margin: 1rem 0;
-}
-
-.exam-detail__header h1 {
-  margin: 0 0 0.25rem;
-}
-
-.exam-detail__description {
-  margin: 0 0 0.5rem;
-  color: var(--color-muted);
-}
-
-.exam-detail__meta {
-  display: flex;
-  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+
+.page-header__text {
+  min-width: 0;
+}
+
+.page-header h1 {
   margin: 0;
+  font-size: 2rem;
+  color: var(--color-navy);
+}
+
+.page-header__subtitle {
+  margin: 0.35rem 0 0;
   color: var(--color-muted);
 }
 
 .exam-detail__actions {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding: 0 1.1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-navy);
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.button-secondary:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.publish {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding: 0 1.1rem;
+  background: var(--color-primary);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.publish:hover {
+  background: var(--color-primary-dark);
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-navy);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.icon-button:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.icon-button.danger {
+  color: var(--color-danger);
+}
+
+.icon-button.danger:hover:not(:disabled) {
+  border-color: var(--color-danger);
+  background: #fff5f5;
+}
+
+.icon-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.button-secondary svg,
+.publish svg,
+.icon-button svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+
+.stat__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 12px;
+}
+
+.stat__icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.stat--status .stat__icon,
+.stat--attempts .stat__icon {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.stat--questions .stat__icon,
+.stat--published .stat__icon {
+  background: #e8edf7;
+  color: var(--color-navy);
+}
+
+.stat h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.stat__value {
+  margin: 0.35rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-navy);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+
+.panel__header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--color-navy);
+}
+
+.panel__header p {
+  margin: 0.3rem 0 0;
+  color: var(--color-muted);
 }
 
 .questions {
-  padding-left: 1.25rem;
   display: grid;
   gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .question {
-  padding: 1rem;
-  background: var(--color-surface);
+  padding: 1.25rem;
+  background: #f8fafd;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-left: 4px solid var(--color-primary);
+  border-radius: 12px;
+}
+
+.question__number {
+  color: var(--color-primary-dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .question__statement {
-  margin: 0 0 0.75rem;
+  margin: 0.35rem 0 0.9rem;
+  color: var(--color-navy);
   font-weight: 600;
 }
 
 .options {
-  list-style: none;
-  padding: 0;
-  margin: 0;
   display: grid;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .option {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.75rem;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 6px;
-}
-
-.option--correct {
-  border-color: var(--color-success);
-  background: #ebfbee;
+  border-radius: 10px;
 }
 
 .option__letter {
-  font-weight: 600;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  background: #e8edf7;
+  border-radius: 8px;
+  color: var(--color-navy);
+  font-weight: 700;
+}
+
+.option__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.option--correct {
+  background: #ebfbee;
+  border-color: var(--color-success);
+}
+
+.option--correct .option__letter {
+  background: var(--color-success);
+  color: #fff;
 }
 
 .option__mark {
-  margin-left: auto;
   color: var(--color-success);
+  font-size: 0.9rem;
   font-weight: 600;
-}
-
-button,
-.button {
-  padding: 0.4rem 0.8rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  cursor: pointer;
-  font: inherit;
-  color: inherit;
-  text-decoration: none;
-}
-
-button.danger {
-  color: var(--color-danger);
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  white-space: nowrap;
 }
 </style>

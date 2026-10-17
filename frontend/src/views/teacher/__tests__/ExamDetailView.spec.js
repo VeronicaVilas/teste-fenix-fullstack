@@ -79,14 +79,39 @@ describe('ExamDetailView', () => {
   it('shows edit and publish actions only for drafts', async () => {
     getExam.mockResolvedValue(exam())
     const draft = await mountDetail()
-    expect(draft.find('.exam-detail__actions').text()).toContain('Editar')
+    expect(draft.find('.exam-detail__actions [aria-label="Editar prova"]').exists()).toBe(true)
+    expect(draft.find('.exam-detail__actions .publish').text()).toBe('Publicar')
 
     getExam.mockResolvedValue(exam({ status: 'published', published_at: '2026-10-15T10:00:00+00:00' }))
     const published = await mountDetail()
 
-    expect(published.find('.exam-detail__actions').text()).not.toContain('Editar')
+    expect(published.find('.exam-detail__actions [aria-label="Editar prova"]').exists()).toBe(false)
     expect(published.find('.exam-detail__actions').text()).not.toContain('Publicar')
     expect(published.text()).toContain('Prova publicada: não pode mais ser editada.')
+  })
+
+  it('uses icon-only buttons to edit and delete', async () => {
+    getExam.mockResolvedValue(exam())
+    const actions = (await mountDetail()).find('.exam-detail__actions')
+
+    for (const label of ['Editar prova', 'Excluir prova']) {
+      const action = actions.find(`[aria-label="${label}"]`)
+      expect(action.find('svg').exists()).toBe(true)
+      expect(action.text()).toBe('')
+    }
+    expect(actions.find('.button-secondary').attributes('href')).toBe('/teacher/exams')
+  })
+
+  it('shows the exam counters as stat cards', async () => {
+    getExam.mockResolvedValue(exam({ status: 'published', published_at: '2026-10-15T10:00:00+00:00', attempts_count: 4 }))
+
+    const stats = (await mountDetail()).findAll('.stat')
+
+    expect(stats.map((stat) => stat.find('h2').text())).toEqual(['Status', 'Questões', 'Tentativas', 'Publicada em'])
+    expect(stats[0].find('.stat__value').text()).toBe('Publicada')
+    expect(stats[1].find('.stat__value').text()).toBe('1')
+    expect(stats[2].find('.stat__value').text()).toBe('4')
+    expect(stats[3].find('.stat__value').text()).toBe('15/10/2026')
   })
 
   it('shows a not found message on 404', async () => {
@@ -150,8 +175,7 @@ describe('ExamDetailView', () => {
     publishExam.mockResolvedValue(exam({ status: 'published', published_at: '2026-10-15T14:00:00+00:00' }))
     const wrapper = await mountDetail()
 
-    const publishButton = wrapper.findAll('.exam-detail__actions button').find((button) => button.text() === 'Publicar')
-    await publishButton.trigger('click')
+    await wrapper.find('.exam-detail__actions .publish').trigger('click')
     await wrapper.find('.dialog__confirm').trigger('click')
     await flushPromises()
 
@@ -159,7 +183,7 @@ describe('ExamDetailView', () => {
     expect(wrapper.text()).toContain('Prova publicada.')
     expect(wrapper.text()).toContain('Publicada')
     expect(wrapper.text()).toContain('Prova publicada: não pode mais ser editada.')
-    expect(wrapper.find('.exam-detail__actions').text()).not.toContain('Editar')
+    expect(wrapper.find('.exam-detail__actions [aria-label="Editar prova"]').exists()).toBe(false)
     expect(wrapper.find('.exam-detail__actions').text()).not.toContain('Publicar')
   })
 })
