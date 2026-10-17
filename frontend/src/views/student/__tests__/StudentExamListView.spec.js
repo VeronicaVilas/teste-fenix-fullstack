@@ -5,10 +5,10 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import StudentExamListView from '../StudentExamListView.vue'
 import { routes } from '@/router'
-import { listAvailableExams } from '@/services/studentExamService'
+import { listAllAvailableExams } from '@/services/studentExamService'
 import { ROLES, useSessionStore } from '@/stores/session'
 
-vi.mock('@/services/studentExamService', () => ({ listAvailableExams: vi.fn() }))
+vi.mock('@/services/studentExamService', () => ({ listAllAvailableExams: vi.fn() }))
 
 const answered = {
   id: 3,
@@ -30,8 +30,8 @@ const pending = {
   attempt: null,
 }
 
-function page(items, meta = {}) {
-  return { items, meta: { current_page: 1, last_page: 1, per_page: 10, total: items.length, ...meta } }
+function manyPending(count) {
+  return Array.from({ length: count }, (_, index) => ({ ...pending, id: index + 10, title: `Prova ${index + 1}` }))
 }
 
 async function mountList() {
@@ -52,57 +52,95 @@ describe('StudentExamListView', () => {
     vi.clearAllMocks()
   })
 
-  it('lists available exams for the current student', async () => {
-    listAvailableExams.mockResolvedValue(page([answered, pending]))
+  it('lists every exam of the current student', async () => {
+    listAllAvailableExams.mockResolvedValue([answered, pending])
 
-    const cards = (await mountList()).findAll('.card')
+    const wrapper = await mountList()
+    const rows = wrapper.findAll('tbody tr')
 
-    expect(listAvailableExams).toHaveBeenCalledWith(3, 1)
-    expect(cards).toHaveLength(2)
-    expect(cards[0].text()).toContain('Prova de Geografia')
-    expect(cards[1].text()).toContain('8 questões')
+    expect(listAllAvailableExams).toHaveBeenCalledWith(3)
+    expect(wrapper.findAll('th').map((header) => header.text())).toEqual([
+      'Título',
+      'Questões',
+      'Situação',
+      'Nota',
+      'Ações',
+    ])
+    expect(rows).toHaveLength(2)
+    expect(rows[0].text()).toContain('Prova de Geografia')
+    expect(rows[1].findAll('td')[1].text()).toBe('8')
   })
 
-  it('shows the score of answered exams', async () => {
-    listAvailableExams.mockResolvedValue(page([answered]))
+  it('shows the grade and a review icon for answered exams', async () => {
+    listAllAvailableExams.mockResolvedValue([answered])
 
-    const card = (await mountList()).find('.card')
+    const row = (await mountList()).find('tbody tr')
+    const review = row.find('[aria-label="Revisar prova"]')
 
-    expect(card.classes()).toContain('card--answered')
-    expect(card.text()).toContain('Nota: 4/5 (80%)')
-    expect(card.find('a').text()).toBe('Ver resultado')
-    expect(card.find('a').attributes('href')).toBe('/student/exams/3/result')
-    expect(card.text()).not.toContain('Fazer prova')
+    expect(row.find('.badge--answered').text()).toBe('Realizada')
+    expect(row.find('.student-exams__grade strong').text()).toBe('8,0')
+    expect(row.find('.student-exams__grade small').text()).toBe('4/5 acertos')
+    expect(review.attributes('href')).toBe('/student/exams/3/result')
+    expect(review.find('svg').exists()).toBe(true)
+    expect(review.text()).toBe('')
+    expect(row.find('.start').exists()).toBe(false)
   })
 
-  it('offers pending exams to be taken', async () => {
-    listAvailableExams.mockResolvedValue(page([pending]))
+  it('offers pending exams to be started', async () => {
+    listAllAvailableExams.mockResolvedValue([pending])
 
-    const card = (await mountList()).find('.card')
+    const row = (await mountList()).find('tbody tr')
 
-    expect(card.text()).toContain('A fazer')
-    expect(card.find('a').text()).toBe('Fazer prova')
-    expect(card.find('a').attributes('href')).toBe('/student/exams/4')
+    expect(row.find('.badge--pending').text()).toBe('A fazer')
+    expect(row.find('.student-exams__grade').text()).toBe('—')
+    expect(row.find('.start').text()).toBe('Iniciar')
+    expect(row.find('.start').attributes('href')).toBe('/student/exams/4')
   })
 
-  it('loads another page', async () => {
-    listAvailableExams.mockResolvedValue(page([pending], { last_page: 2, total: 11 }))
+  it('filters by situation', async () => {
+    listAllAvailableExams.mockResolvedValue([answered, pending])
+    const wrapper = await mountList()
+    const buttons = wrapper.findAll('.student-exams__filters button')
+
+    await buttons[1].trigger('click')
+    expect(wrapper.findAll('tbody tr').map((row) => row.find('td').text())).toEqual(['Prova de História'])
+
+    await buttons[2].trigger('click')
+    expect(wrapper.findAll('tbody tr').map((row) => row.find('td').text())).toEqual(['Prova de Geografia'])
+    expect(buttons[2].classes()).toContain('active')
+  })
+
+  it('shows the empty state of a filter', async () => {
+    listAllAvailableExams.mockResolvedValue([pending])
     const wrapper = await mountList()
 
-    await wrapper.findAll('.pagination button')[1].trigger('click')
-    await flushPromises()
+    await wrapper.findAll('.student-exams__filters button')[2].trigger('click')
 
-    expect(listAvailableExams).toHaveBeenLastCalledWith(3, 2)
+    expect(wrapper.text()).toContain('Nenhuma prova nesta situação.')
+  })
+
+  it('paginates ten exams per page and goes back to the first page when filtering', async () => {
+    listAllAvailableExams.mockResolvedValue(manyPending(12))
+    const wrapper = await mountList()
+
+    expect(wrapper.findAll('tbody tr')).toHaveLength(10)
+    expect(wrapper.find('.pagination').text()).toContain('Página 1 de 2')
+
+    await wrapper.findAll('.pagination button')[1].trigger('click')
+    expect(wrapper.findAll('tbody tr')).toHaveLength(2)
+
+    await wrapper.findAll('.student-exams__filters button')[1].trigger('click')
+    expect(wrapper.find('.pagination').text()).toContain('Página 1 de 2')
   })
 
   it('shows the empty state', async () => {
-    listAvailableExams.mockResolvedValue(page([]))
+    listAllAvailableExams.mockResolvedValue([])
 
     expect((await mountList()).text()).toContain('Nenhuma prova disponível no momento.')
   })
 
   it('shows the API error', async () => {
-    listAvailableExams.mockRejectedValue({ status: 0, message: 'Não foi possível conectar ao servidor.', errors: {} })
+    listAllAvailableExams.mockRejectedValue({ status: 0, message: 'Não foi possível conectar ao servidor.', errors: {} })
 
     expect((await mountList()).text()).toContain('Não foi possível conectar ao servidor.')
   })

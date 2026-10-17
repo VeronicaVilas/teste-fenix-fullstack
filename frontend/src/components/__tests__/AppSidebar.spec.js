@@ -92,7 +92,8 @@ describe('AppSidebar', () => {
 
     const { wrapper } = await mountSidebar('/student/exams')
 
-    expect(wrapper.findAll('.menu__item').map((item) => item.text())).toEqual(['Minhas provas'])
+    expect(wrapper.findAll('.menu__item').map((item) => item.text())).toEqual(['Dashboard', 'Minhas provas'])
+    expect(wrapper.find('.menu__item--active').text()).toBe('Minhas provas')
     expect(wrapper.find('.access__current').text()).toContain('Aluno')
   })
 

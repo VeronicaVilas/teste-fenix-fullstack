@@ -25,7 +25,10 @@ const menus = {
     { label: 'Minhas provas', to: { name: 'teacher-exams' }, icon: ClipboardList },
     { label: 'Criar prova', to: { name: 'teacher-exam-create' }, icon: FilePlus2 },
   ],
-  [ROLES.STUDENT]: [{ label: 'Minhas provas', to: { name: 'student-exams' }, icon: ClipboardList }],
+  [ROLES.STUDENT]: [
+    { label: 'Dashboard', to: { name: 'student-dashboard' }, icon: LayoutDashboard },
+    { label: 'Minhas provas', to: { name: 'student-exams' }, icon: ClipboardList },
+  ],
 }
 
 const homes = {
