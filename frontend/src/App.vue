@@ -1,45 +1,63 @@
 <script setup>
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
 
-import { useSessionStore } from '@/stores/session'
+import AppSidebar from '@/components/AppSidebar.vue'
+import AppTopbar from '@/components/AppTopbar.vue'
 
-const router = useRouter()
-const session = useSessionStore()
+const route = useRoute()
 
-function switchAccess() {
-  session.leave()
-  router.push({ name: 'home' })
+const menuOpen = ref(false)
+
+function closeMenu() {
+  menuOpen.value = false
 }
+
+function closeOnEscape(event) {
+  if (event.key === 'Escape') {
+    closeMenu()
+  }
+}
+
+watch(() => route.fullPath, closeMenu)
+
+onMounted(() => window.addEventListener('keydown', closeOnEscape))
+
+onBeforeUnmount(() => window.removeEventListener('keydown', closeOnEscape))
 </script>
 
 <template>
-  <header class="app-header">
-    <strong>Fênix</strong>
-    <nav v-if="session.isTeacher" class="app-header__nav">
-      <RouterLink :to="{ name: 'teacher-exams' }">Provas</RouterLink>
-      <RouterLink :to="{ name: 'teacher-dashboard' }">Dashboard</RouterLink>
-    </nav>
-    <nav v-if="session.isStudent" class="app-header__nav">
-      <RouterLink :to="{ name: 'student-exams' }">Minhas provas</RouterLink>
-    </nav>
-    <div v-if="session.role" class="app-header__session">
-      <span>Acessando como: {{ session.name }} ({{ session.roleLabel }})</span>
-      <button type="button" @click="switchAccess">Trocar acesso</button>
+  <div class="app-layout">
+    <AppSidebar :open="menuOpen" @close="closeMenu" />
+
+    <Transition name="fade">
+      <div v-if="menuOpen" class="app-backdrop" @click="closeMenu" />
+    </Transition>
+
+    <div class="app-content">
+      <AppTopbar @open-menu="menuOpen = true" />
+      <main class="app-main">
+        <RouterView />
+      </main>
     </div>
-  </header>
-  <main class="app-main">
-    <RouterView />
-  </main>
+  </div>
 </template>
 
 <style>
 :root {
-  --color-bg: #f6f7f9;
+  --color-navy: #0f1e3d;
+  --color-navy-light: #1a2c52;
+  --color-navy-border: #263a66;
+  --color-sidebar-text: #c7d2e6;
+  --color-sidebar-muted: #7d8db0;
+  --color-bg: #f4f6fb;
   --color-surface: #ffffff;
-  --color-text: #1f2933;
-  --color-muted: #616e7c;
-  --color-border: #d9e2ec;
-  --color-primary: #e8590c;
+  --color-text: #1b2540;
+  --color-muted: #5f6b85;
+  --color-border: #dde3ee;
+  --color-primary: #f97316;
+  --color-primary-dark: #ea580c;
+  --color-primary-soft: #fff1e6;
   --color-success: #2f9e44;
   --color-danger: #e03131;
 }
@@ -55,50 +73,66 @@ body {
   color: var(--color-text);
 }
 
-.app-header {
+.app-layout {
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  min-height: 100vh;
+}
+
+.app-layout > .sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.app-content {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.app-header__nav {
-  display: flex;
-  gap: 1rem;
-}
-
-.app-header__nav a {
-  color: var(--color-muted);
-  text-decoration: none;
-}
-
-.app-header__nav a.router-link-active {
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
-.app-header__session {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-left: auto;
-  color: var(--color-muted);
-}
-
-.app-header__session button {
-  padding: 0.4rem 0.8rem;
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  cursor: pointer;
-  font: inherit;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .app-main {
+  width: 100%;
   max-width: 1080px;
   margin: 0 auto;
-  padding: 1.5rem 1rem;
+  padding: 2rem 1.5rem;
+}
+
+.app-backdrop {
+  display: none;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: 1024px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .app-layout > .sidebar {
+    position: fixed;
+    height: auto;
+  }
+
+  .app-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: rgba(11, 22, 46, 0.5);
+    backdrop-filter: blur(2px);
+  }
+
+  .app-main {
+    padding: 1.25rem 1rem;
+  }
 }
 </style>
