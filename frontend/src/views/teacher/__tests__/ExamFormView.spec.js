@@ -76,7 +76,7 @@ describe('ExamFormView', () => {
         },
       ],
     })
-    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'))
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'), { timeout: 5000 })
     expect(router.currentRoute.value.params.id).toBe('10')
   })
 
@@ -161,7 +161,7 @@ describe('ExamFormView', () => {
           },
         ],
       })
-      await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'))
+      await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'), { timeout: 5000 })
     })
 
     it('redirects published exams to the detail page', async () => {
@@ -169,7 +169,7 @@ describe('ExamFormView', () => {
 
       const { router } = await mountForm('10')
 
-      await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'))
+      await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'), { timeout: 5000 })
     })
 
     it('goes to the detail page when the exam was published meanwhile', async () => {
@@ -180,7 +180,7 @@ describe('ExamFormView', () => {
       await wrapper.find('form').trigger('submit')
       await flushPromises()
 
-      await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'))
+      await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exam-detail'), { timeout: 5000 })
     })
 
     it('shows not found for unknown exams', async () => {

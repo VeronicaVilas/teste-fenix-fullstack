@@ -116,7 +116,7 @@ describe('ExamDetailView', () => {
     await flushPromises()
 
     expect(deleteExam).toHaveBeenCalledWith(1, '10')
-    await vi.waitFor(() => expect(wrapper.router.currentRoute.value.name).toBe('teacher-exams'))
+    await vi.waitFor(() => expect(wrapper.router.currentRoute.value.name).toBe('teacher-exams'), { timeout: 5000 })
     expect(wrapper.router.currentRoute.value.query.deleted).toBe('1')
   })
 

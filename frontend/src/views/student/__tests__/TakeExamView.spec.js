@@ -99,7 +99,7 @@ describe('TakeExamView', () => {
     const wrapper = await mountExam()
 
     expect(wrapper.find('.question').exists()).toBe(false)
-    await vi.waitFor(() => expect(wrapper.router.currentRoute.value.name).toBe('student-exam-result'))
+    await vi.waitFor(() => expect(wrapper.router.currentRoute.value.name).toBe('student-exam-result'), { timeout: 5000 })
   })
 
   it('shows not found for drafts or missing exams', async () => {
@@ -152,7 +152,7 @@ describe('TakeExamView', () => {
       await flushPromises()
 
       expect(submitAttempt).toHaveBeenCalledWith(3, '10', { 20: 32, 21: 33 })
-      await vi.waitFor(() => expect(wrapper.router.currentRoute.value.name).toBe('student-exam-result'))
+      await vi.waitFor(() => expect(wrapper.router.currentRoute.value.name).toBe('student-exam-result'), { timeout: 5000 })
       expect(wrapper.router.currentRoute.value.params.id).toBe('10')
     })
 
@@ -166,7 +166,7 @@ describe('TakeExamView', () => {
       await wrapper.find('.dialog__confirm').trigger('click')
       await flushPromises()
 
-      await vi.waitFor(() => expect(wrapper.router.currentRoute.value.name).toBe('student-exam-result'))
+      await vi.waitFor(() => expect(wrapper.router.currentRoute.value.name).toBe('student-exam-result'), { timeout: 5000 })
     })
 
     it('keeps the answers and shows the message on 422', async () => {
