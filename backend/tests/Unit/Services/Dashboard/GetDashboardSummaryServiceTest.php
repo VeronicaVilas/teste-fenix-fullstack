@@ -36,6 +36,7 @@ class GetDashboardSummaryServiceTest extends TestCase
             'totals' => ['total_attempts' => 2, 'total_students' => 2, 'average_percentage' => '75.00'],
             'best' => ['student_name' => 'Ana Souza', 'percentage' => '100.00'],
             'worst' => ['student_name' => 'Bruno Lima', 'percentage' => '50.00'],
+            'top_student' => ['student_name' => 'Ana Souza', 'exams_count' => 2, 'total_grade' => '15.00'],
             'exams' => [['id' => 10, 'title' => 'Prova de Geografia']],
         ], $summary);
     }
@@ -90,6 +91,8 @@ class GetDashboardSummaryServiceTest extends TestCase
                 ->andReturn(['student_name' => 'Ana Souza', 'percentage' => '100.00']);
             $mock->shouldReceive('worstAttempt')->times($times)
                 ->andReturn(['student_name' => 'Bruno Lima', 'percentage' => '50.00']);
+            $mock->shouldReceive('topStudent')->times($times)
+                ->andReturn(['student_name' => 'Ana Souza', 'exams_count' => 2, 'total_grade' => '15.00']);
             $mock->shouldReceive('examStats')->times($times)->with(1)
                 ->andReturn([['id' => 10, 'title' => 'Prova de Geografia']]);
         });

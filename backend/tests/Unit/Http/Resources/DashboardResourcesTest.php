@@ -18,6 +18,7 @@ class DashboardResourcesTest extends TestCase
             'totals' => ['total_attempts' => 3, 'total_students' => 3, 'average_percentage' => '66.666'],
             'best' => $this->attempt('Ana Souza', 3, '100'),
             'worst' => $this->attempt('Bruno Lima', 1, 33.333),
+            'top_student' => ['student_name' => 'Ana Souza', 'exams_count' => '2', 'total_grade' => 18.5],
             'exams' => [
                 ['id' => '10', 'title' => 'Prova de Geografia', 'attempts_count' => '3', 'average_percentage' => 66.67, 'best_percentage' => '100.00', 'worst_percentage' => '33.33'],
             ],
@@ -44,6 +45,7 @@ class DashboardResourcesTest extends TestCase
                 'percentage' => '33.33',
                 'submitted_at' => '2026-10-16T10:00:00+00:00',
             ],
+            'top_student' => ['student_name' => 'Ana Souza', 'exams_count' => 2, 'total_grade' => '18.50'],
             'exams' => [
                 ['id' => 10, 'title' => 'Prova de Geografia', 'attempts_count' => 3, 'average_percentage' => '66.67', 'best_percentage' => '100.00', 'worst_percentage' => '33.33'],
             ],
@@ -57,6 +59,7 @@ class DashboardResourcesTest extends TestCase
             'totals' => ['total_attempts' => 0, 'total_students' => 0, 'average_percentage' => null],
             'best' => null,
             'worst' => null,
+            'top_student' => null,
             'exams' => [
                 ['id' => 11, 'title' => 'Prova de História', 'attempts_count' => 0, 'average_percentage' => null, 'best_percentage' => null, 'worst_percentage' => null],
             ],
@@ -65,6 +68,7 @@ class DashboardResourcesTest extends TestCase
         $this->assertNull($data['average_percentage']);
         $this->assertNull($data['best']);
         $this->assertNull($data['worst']);
+        $this->assertNull($data['top_student']);
         $this->assertNull($data['exams'][0]['average_percentage']);
     }
 

@@ -54,6 +54,20 @@ class DashboardRepository implements DashboardRepositoryInterface
         return $attempt ? (array) $attempt : null;
     }
 
+    public function topStudent(int $teacherId, ?int $examId): ?array
+    {
+        $student = $this->attemptsOf($teacherId, $examId)
+            ->groupBy('users.id', 'users.name')
+            ->select('users.name as student_name')
+            ->selectRaw('COUNT(attempts.id) as exams_count')
+            ->selectRaw('ROUND(SUM(attempts.percentage) / 10, 2) as total_grade')
+            ->orderByDesc('total_grade')
+            ->orderBy('users.name')
+            ->first();
+
+        return $student ? (array) $student : null;
+    }
+
     public function examStats(int $teacherId): array
     {
         return DB::table('exams')

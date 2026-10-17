@@ -15,6 +15,8 @@ interface DashboardRepositoryInterface
 
     public function worstAttempt(int $teacherId, ?int $examId): ?array;
 
+    public function topStudent(int $teacherId, ?int $examId): ?array;
+
     /**
      * @return array<int, array<string, mixed>>
      */

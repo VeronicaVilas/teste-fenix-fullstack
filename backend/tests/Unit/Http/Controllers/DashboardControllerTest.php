@@ -36,6 +36,7 @@ class DashboardControllerTest extends TestCase
                 ->andReturn(['total_attempts' => 0, 'total_students' => 0, 'average_percentage' => null]);
             $mock->shouldReceive('bestAttempt')->once()->andReturn(null);
             $mock->shouldReceive('worstAttempt')->once()->andReturn(null);
+            $mock->shouldReceive('topStudent')->once()->andReturn(null);
             $mock->shouldReceive('examStats')->once()->with(1)->andReturn([]);
         });
 

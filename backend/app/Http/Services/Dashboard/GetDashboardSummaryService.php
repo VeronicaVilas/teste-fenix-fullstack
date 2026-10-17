@@ -27,6 +27,7 @@ final readonly class GetDashboardSummaryService
             'totals' => $this->dashboardRepository->totals($teacher->id, $examId),
             'best' => $this->dashboardRepository->bestAttempt($teacher->id, $examId),
             'worst' => $this->dashboardRepository->worstAttempt($teacher->id, $examId),
+            'top_student' => $this->dashboardRepository->topStudent($teacher->id, $examId),
             'exams' => $this->dashboardRepository->examStats($teacher->id),
         ]);
     }
