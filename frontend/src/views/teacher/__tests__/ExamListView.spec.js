@@ -67,7 +67,15 @@ describe('ExamListView', () => {
     expect(rows[0].text()).toContain('Prova de História')
     expect(rows[0].text()).toContain('Rascunho')
     expect(rows[1].text()).toContain('Publicada')
-    expect(rows[1].findAll('td')[3].text()).toBe('4')
+    expect(rows[1].findAll('td')[2].text()).toBe('3')
+  })
+
+  it('has no attempts or created at columns', async () => {
+    listExams.mockResolvedValue(page([draft, published]))
+
+    const headers = (await mountList()).findAll('th').map((header) => header.text())
+
+    expect(headers).toEqual(['Título', 'Status', 'Questões', 'Ações'])
   })
 
   it('shows edit and publish only for drafts', async () => {
@@ -75,10 +83,24 @@ describe('ExamListView', () => {
 
     const [draftRow, publishedRow] = (await mountList()).findAll('tbody tr')
 
-    expect(draftRow.text()).toContain('Editar')
-    expect(draftRow.text()).toContain('Publicar')
-    expect(publishedRow.text()).not.toContain('Editar')
-    expect(publishedRow.text()).not.toContain('Publicar')
+    expect(draftRow.find('[aria-label="Ver prova"]').exists()).toBe(true)
+    expect(draftRow.find('[aria-label="Editar prova"]').exists()).toBe(true)
+    expect(draftRow.find('button.publish').text()).toBe('Publicar')
+    expect(publishedRow.find('[aria-label="Ver prova"]').exists()).toBe(true)
+    expect(publishedRow.find('[aria-label="Editar prova"]').exists()).toBe(false)
+    expect(publishedRow.find('button.publish').exists()).toBe(false)
+  })
+
+  it('shows view, edit and delete as icon-only buttons', async () => {
+    listExams.mockResolvedValue(page([draft]))
+
+    const row = (await mountList()).find('tbody tr')
+
+    for (const label of ['Ver prova', 'Editar prova', 'Excluir prova']) {
+      const action = row.find(`[aria-label="${label}"]`)
+      expect(action.find('svg').exists()).toBe(true)
+      expect(action.text()).toBe('')
+    }
   })
 
   it('filters by status starting from the first page', async () => {
@@ -199,8 +221,7 @@ describe('ExamListView', () => {
     publishExam.mockResolvedValue({ ...draft, status: 'published', published_at: '2026-10-15T14:00:00+00:00' })
     const wrapper = await mountList()
 
-    const publishButton = wrapper.findAll('tbody tr button').find((button) => button.text() === 'Publicar')
-    await publishButton.trigger('click')
+    await wrapper.find('button.publish').trigger('click')
     expect(wrapper.find('[role="dialog"]').text()).toContain('não poderá mais ser editada')
     expect(publishExam).not.toHaveBeenCalled()
 
@@ -210,8 +231,8 @@ describe('ExamListView', () => {
     const row = wrapper.find('tbody tr')
     expect(publishExam).toHaveBeenCalledWith(1, 2)
     expect(row.text()).toContain('Publicada')
-    expect(row.text()).not.toContain('Editar')
-    expect(row.text()).not.toContain('Publicar')
+    expect(row.find('[aria-label="Editar prova"]').exists()).toBe(false)
+    expect(row.find('button.publish').exists()).toBe(false)
     expect(wrapper.text()).toContain('Prova publicada.')
   })
 
@@ -220,7 +241,7 @@ describe('ExamListView', () => {
     publishExam.mockRejectedValue({ status: 409, message: 'Prova publicada não pode ser alterada.', errors: {} })
     const wrapper = await mountList()
 
-    await wrapper.findAll('tbody tr button').find((button) => button.text() === 'Publicar').trigger('click')
+    await wrapper.find('button.publish').trigger('click')
     await wrapper.find('.dialog__confirm').trigger('click')
     await flushPromises()
 

@@ -12,9 +12,9 @@ import { ROLES, useSessionStore } from '@/stores/session'
 
 vi.mock('@/services/dashboardService', () => ({
   getDashboardSummary: vi.fn(),
-  getDashboardRanking: vi.fn().mockResolvedValue({
+  getExamsRanking: vi.fn().mockResolvedValue({
     items: [],
-    meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 },
+    meta: { current_page: 1, last_page: 1, per_page: 4, total: 0 },
   }),
 }))
 vi.mock('@/services/examService', () => ({ listExams: vi.fn() }))
@@ -97,13 +97,15 @@ describe('DashboardView', () => {
     expect(stat(wrapper, 'top').find('.stat__value').text()).toBe('Ana Souza')
   })
 
-  it('lists the average of each exam', async () => {
-    const rows = (await mountDashboard()).findAll('tbody tr')
+  it('shows the exam averages and the exams ranking panels', async () => {
+    const wrapper = await mountDashboard()
 
-    expect(rows).toHaveLength(2)
-    expect(rows[0].text()).toContain('Prova de Geografia')
-    expect(rows[0].text()).toContain('66,67%')
-    expect(rows[1].findAll('td')[2].text()).toBe('—')
+    expect(wrapper.findAll('.panel h2').map((title) => title.text())).toEqual([
+      'Média das provas',
+      'Ranking das médias das provas',
+    ])
+    expect(wrapper.findAll('.exam')).toHaveLength(2)
+    expect(wrapper.find('.exam__grade strong').text()).toBe('6,7')
   })
 
   it('shows empty metrics without attempts', async () => {
