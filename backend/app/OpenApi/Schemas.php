@@ -351,4 +351,24 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
     ]
 )]
+#[OA\Schema(
+    schema: 'ExamRankingItem',
+    required: ['position', 'exam_id', 'title', 'students_count', 'average_percentage', 'best_student_name'],
+    properties: [
+        new OA\Property(property: 'position', type: 'integer', example: 1),
+        new OA\Property(property: 'exam_id', type: 'integer', example: 3),
+        new OA\Property(property: 'title', type: 'string', example: 'Prova de Geografia'),
+        new OA\Property(property: 'students_count', type: 'integer', example: 6),
+        new OA\Property(property: 'average_percentage', type: 'string', example: '83.33'),
+        new OA\Property(property: 'best_student_name', type: 'string', example: 'Ana Souza'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'PaginatedExamRanking',
+    required: ['items', 'meta'],
+    properties: [
+        new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/ExamRankingItem')),
+        new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+    ]
+)]
 final class Schemas {}

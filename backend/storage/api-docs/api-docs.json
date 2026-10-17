@@ -324,6 +324,79 @@
                 }
             }
         },
+        "/teachers/{teacher}/dashboard/exams-ranking": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Ranking das provas pela média, paginado",
+                "description": "Provas publicadas do professor com tentativas, ordenadas pela média (maior primeiro), com o número de alunos e o melhor aluno de cada prova. Posição calculada no banco com ROW_NUMBER() e cada página em cache no Redis.",
+                "operationId": "dashboardExamsRanking",
+                "parameters": [
+                    {
+                        "name": "teacher",
+                        "in": "path",
+                        "description": "Id do professor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 50,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ranking das provas carregado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ranking das provas carregado com sucesso."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/PaginatedExamRanking"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
+                    }
+                }
+            }
+        },
         "/teachers/{teacher}/exams": {
             "get": {
                 "tags": [
@@ -1863,6 +1936,61 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/RankingItem"
+                        }
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                },
+                "type": "object"
+            },
+            "ExamRankingItem": {
+                "required": [
+                    "position",
+                    "exam_id",
+                    "title",
+                    "students_count",
+                    "average_percentage",
+                    "best_student_name"
+                ],
+                "properties": {
+                    "position": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "exam_id": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Prova de Geografia"
+                    },
+                    "students_count": {
+                        "type": "integer",
+                        "example": 6
+                    },
+                    "average_percentage": {
+                        "type": "string",
+                        "example": "83.33"
+                    },
+                    "best_student_name": {
+                        "type": "string",
+                        "example": "Ana Souza"
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatedExamRanking": {
+                "required": [
+                    "items",
+                    "meta"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExamRankingItem"
                         }
                     },
                     "meta": {
