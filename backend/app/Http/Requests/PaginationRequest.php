@@ -30,6 +30,11 @@ class PaginationRequest extends FormRequest
         ];
     }
 
+    public function page(): int
+    {
+        return $this->integer('page', 1);
+    }
+
     public function perPage(): int
     {
         return $this->integer('per_page', 10);

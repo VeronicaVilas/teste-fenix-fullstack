@@ -4,6 +4,8 @@ namespace Tests\Unit\Http\Controllers;
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Requests\DashboardFilterRequest;
+use App\Http\Requests\PaginationRequest;
+use App\Http\Services\Dashboard\GetDashboardExamsRankingService;
 use App\Http\Services\Dashboard\GetDashboardRankingService;
 use App\Http\Services\Dashboard\GetDashboardSummaryService;
 use App\Interfaces\DashboardRepositoryInterface;
@@ -80,5 +82,30 @@ class DashboardControllerTest extends TestCase
     private function examRepository(): ExamRepositoryInterface
     {
         return Mockery::mock(ExamRepositoryInterface::class, fn (MockInterface $mock) => $mock->shouldNotReceive('findForTeacher'));
+    }
+
+    public function test_exams_ranking_returns_paginated_exams(): void
+    {
+        $dashboard = Mockery::mock(DashboardRepositoryInterface::class, function (MockInterface $mock) {
+            $mock->shouldReceive('examsRanking')->once()->with(1, 1, 4)->andReturn(new LengthAwarePaginator([[
+                'position' => 1,
+                'exam_id' => 12,
+                'title' => 'Prova de Química',
+                'students_count' => 4,
+                'average_percentage' => '83.33',
+                'best_student_name' => 'Ana Souza',
+            ]], 1, 4, 1));
+        });
+
+        $response = (new DashboardController)->examsRanking(
+            $this->validatedRequest(PaginationRequest::class, ['per_page' => 4], 'GET'),
+            $this->teacher,
+            new GetDashboardExamsRankingService($dashboard),
+        );
+
+        $data = $response->getData(true);
+        $this->assertSame('Ranking das provas carregado com sucesso.', $data['message']);
+        $this->assertSame('Ana Souza', $data['data']['items'][0]['best_student_name']);
+        $this->assertSame(['current_page' => 1, 'last_page' => 1, 'per_page' => 4, 'total' => 1], $data['data']['meta']);
     }
 }

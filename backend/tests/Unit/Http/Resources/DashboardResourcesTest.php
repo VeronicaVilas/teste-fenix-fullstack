@@ -3,6 +3,7 @@
 namespace Tests\Unit\Http\Resources;
 
 use App\Http\Resources\DashboardSummaryResource;
+use App\Http\Resources\ExamRankingItemResource;
 use App\Http\Resources\RankingItemResource;
 use Tests\Concerns\ResolvesResources;
 use Tests\TestCase;
@@ -105,5 +106,24 @@ class DashboardResourcesTest extends TestCase
             'percentage' => $percentage,
             'submitted_at' => '2026-10-16 10:00:00',
         ];
+    }
+
+    public function test_exam_ranking_item_casts_database_values(): void
+    {
+        $this->assertSame([
+            'position' => 1,
+            'exam_id' => 12,
+            'title' => 'Prova de Química',
+            'students_count' => 4,
+            'average_percentage' => '83.33',
+            'best_student_name' => 'Ana Souza',
+        ], $this->resolveResource(new ExamRankingItemResource([
+            'position' => '1',
+            'exam_id' => '12',
+            'title' => 'Prova de Química',
+            'students_count' => '4',
+            'average_percentage' => '83.3333',
+            'best_student_name' => 'Ana Souza',
+        ])));
     }
 }

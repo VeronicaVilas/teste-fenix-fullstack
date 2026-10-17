@@ -23,4 +23,6 @@ interface DashboardRepositoryInterface
     public function examStats(int $teacherId): array;
 
     public function ranking(int $teacherId, ?int $examId, int $page, int $perPage): LengthAwarePaginator;
+
+    public function examsRanking(int $teacherId, int $page, int $perPage): LengthAwarePaginator;
 }

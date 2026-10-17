@@ -98,6 +98,34 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->through(fn (object $row) => (array) $row);
     }
 
+    public function examsRanking(int $teacherId, int $page, int $perPage): LengthAwarePaginator
+    {
+        $bestStudent = DB::table('attempts as best')
+            ->join('users as best_users', 'best_users.id', '=', 'best.student_id')
+            ->whereColumn('best.exam_id', 'exams.id')
+            ->orderByDesc('best.percentage')
+            ->orderBy('best.submitted_at')
+            ->orderBy('best.id')
+            ->limit(1)
+            ->select('best_users.name');
+
+        return DB::table('exams')
+            ->join('attempts', 'attempts.exam_id', '=', 'exams.id')
+            ->where('exams.teacher_id', $teacherId)
+            ->where('exams.status', ExamStatus::Published->value)
+            ->groupBy('exams.id', 'exams.title')
+            ->select('exams.id as exam_id', 'exams.title')
+            ->selectRaw('COUNT(attempts.id) as students_count')
+            ->selectRaw('ROUND(AVG(attempts.percentage), 2) as average_percentage')
+            ->selectSub($bestStudent, 'best_student_name')
+            ->selectRaw('ROW_NUMBER() OVER (ORDER BY AVG(attempts.percentage) DESC, exams.title ASC, exams.id ASC) as position')
+            ->orderByRaw('AVG(attempts.percentage) DESC')
+            ->orderBy('exams.title')
+            ->orderBy('exams.id')
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->through(fn (object $row) => (array) $row);
+    }
+
     private function attemptsOf(int $teacherId, ?int $examId): Builder
     {
         return DB::table('attempts')

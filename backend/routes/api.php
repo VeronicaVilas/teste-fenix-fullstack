@@ -25,6 +25,7 @@ Route::prefix('teachers/{teacher}')->group(function () {
     Route::patch('exams/{exam}/publish', [ExamController::class, 'publish'])->whereNumber('exam');
     Route::get('dashboard', [DashboardController::class, 'summary']);
     Route::get('dashboard/ranking', [DashboardController::class, 'ranking']);
+    Route::get('dashboard/exams-ranking', [DashboardController::class, 'examsRanking']);
 });
 
 Route::prefix('students/{student}')->group(function () {

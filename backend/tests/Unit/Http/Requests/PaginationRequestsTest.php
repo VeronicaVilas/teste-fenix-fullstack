@@ -17,12 +17,16 @@ class PaginationRequestsTest extends TestCase
         $request = $this->validatedRequest(PaginationRequest::class, [], 'GET');
 
         $this->assertTrue($request->authorize());
+        $this->assertSame(1, $request->page());
         $this->assertSame(10, $request->perPage());
     }
 
     public function test_pagination_reads_page_size(): void
     {
-        $this->assertSame(25, $this->validatedRequest(PaginationRequest::class, ['per_page' => '25'], 'GET')->perPage());
+        $request = $this->validatedRequest(PaginationRequest::class, ['page' => '3', 'per_page' => '25'], 'GET');
+
+        $this->assertSame(3, $request->page());
+        $this->assertSame(25, $request->perPage());
     }
 
     public function test_pagination_rejects_invalid_values(): void
