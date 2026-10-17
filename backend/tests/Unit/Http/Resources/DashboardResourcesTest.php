@@ -4,7 +4,6 @@ namespace Tests\Unit\Http\Resources;
 
 use App\Http\Resources\DashboardSummaryResource;
 use App\Http\Resources\ExamRankingItemResource;
-use App\Http\Resources\RankingItemResource;
 use Tests\Concerns\ResolvesResources;
 use Tests\TestCase;
 
@@ -15,7 +14,6 @@ class DashboardResourcesTest extends TestCase
     public function test_summary_formats_metrics_and_attempts(): void
     {
         $data = $this->resolveResource(new DashboardSummaryResource([
-            'exam_id' => 10,
             'totals' => ['total_attempts' => 3, 'total_students' => 3, 'average_percentage' => '66.666'],
             'best' => $this->attempt('Ana Souza', 3, '100'),
             'worst' => $this->attempt('Bruno Lima', 1, 33.333),
@@ -26,7 +24,6 @@ class DashboardResourcesTest extends TestCase
         ]));
 
         $this->assertSame([
-            'exam_id' => 10,
             'total_attempts' => 3,
             'total_students' => 3,
             'average_percentage' => '66.67',
@@ -56,7 +53,6 @@ class DashboardResourcesTest extends TestCase
     public function test_summary_without_attempts(): void
     {
         $data = $this->resolveResource(new DashboardSummaryResource([
-            'exam_id' => null,
             'totals' => ['total_attempts' => 0, 'total_students' => 0, 'average_percentage' => null],
             'best' => null,
             'worst' => null,
@@ -71,29 +67,6 @@ class DashboardResourcesTest extends TestCase
         $this->assertNull($data['worst']);
         $this->assertNull($data['top_student']);
         $this->assertNull($data['exams'][0]['average_percentage']);
-    }
-
-    public function test_ranking_item_casts_database_values(): void
-    {
-        $this->assertSame([
-            'position' => 3,
-            'attempt_id' => 9,
-            'student_name' => 'Carla Mendes',
-            'exam_title' => 'Prova de Geografia',
-            'score' => 2,
-            'total_questions' => 3,
-            'percentage' => '66.67',
-            'submitted_at' => '2026-10-16T09:00:00+00:00',
-        ], $this->resolveResource(new RankingItemResource([
-            'position' => '3',
-            'attempt_id' => '9',
-            'student_name' => 'Carla Mendes',
-            'exam_title' => 'Prova de Geografia',
-            'score' => '2',
-            'total_questions' => '3',
-            'percentage' => '66.67',
-            'submitted_at' => '2026-10-16 09:00:00',
-        ])));
     }
 
     private function attempt(string $student, int $score, float|string $percentage): array

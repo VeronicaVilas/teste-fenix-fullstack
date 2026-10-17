@@ -12,7 +12,6 @@ use OpenApi\Attributes as OA;
     tags: ['Dashboard'],
     parameters: [
         new OA\Parameter(name: 'teacher', description: 'Id do professor', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
-        new OA\Parameter(name: 'exam_id', description: 'Filtra as métricas por uma prova do professor', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
     ],
     responses: [
         new OA\Response(
@@ -27,35 +26,6 @@ use OpenApi\Attributes as OA;
             )
         ),
         new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
-        new OA\Response(response: 422, ref: '#/components/responses/UnprocessableEntity'),
-    ]
-)]
-#[OA\Get(
-    path: '/teachers/{teacher}/dashboard/ranking',
-    operationId: 'dashboardRanking',
-    summary: 'Ranking paginado das tentativas',
-    description: 'Ordenado por percentual (maior primeiro); empate → quem enviou primeiro. A posição é calculada no banco com ROW_NUMBER(), contínua entre as páginas. Cada página fica no Redis por 10 minutos.',
-    tags: ['Dashboard'],
-    parameters: [
-        new OA\Parameter(name: 'teacher', description: 'Id do professor', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
-        new OA\Parameter(name: 'exam_id', description: 'Filtra por uma prova do professor', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
-        new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1, minimum: 1)),
-        new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10, maximum: 50, minimum: 1)),
-    ],
-    responses: [
-        new OA\Response(
-            response: 200,
-            description: 'Ranking carregado',
-            content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(property: 'message', type: 'string', example: 'Ranking carregado com sucesso.'),
-                    new OA\Property(property: 'status', type: 'integer', example: 200),
-                    new OA\Property(property: 'data', ref: '#/components/schemas/PaginatedRanking'),
-                ]
-            )
-        ),
-        new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
-        new OA\Response(response: 422, ref: '#/components/responses/UnprocessableEntity'),
     ]
 )]
 #[OA\Get(

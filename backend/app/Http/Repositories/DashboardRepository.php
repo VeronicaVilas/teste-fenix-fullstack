@@ -19,9 +19,9 @@ class DashboardRepository implements DashboardRepositoryInterface
         'attempts.submitted_at',
     ];
 
-    public function totals(int $teacherId, ?int $examId): array
+    public function totals(int $teacherId): array
     {
-        $totals = $this->attemptsOf($teacherId, $examId)
+        $totals = $this->attemptsOf($teacherId)
             ->selectRaw('COUNT(*) as total_attempts')
             ->selectRaw('COUNT(DISTINCT attempts.student_id) as total_students')
             ->selectRaw('ROUND(AVG(attempts.percentage), 2) as average_percentage')
@@ -34,9 +34,9 @@ class DashboardRepository implements DashboardRepositoryInterface
         ];
     }
 
-    public function bestAttempt(int $teacherId, ?int $examId): ?array
+    public function bestAttempt(int $teacherId): ?array
     {
-        $attempt = $this->attemptsOf($teacherId, $examId)
+        $attempt = $this->attemptsOf($teacherId)
             ->orderByDesc('attempts.percentage')
             ->orderBy('attempts.submitted_at')
             ->first(self::ATTEMPT_COLUMNS);
@@ -44,9 +44,9 @@ class DashboardRepository implements DashboardRepositoryInterface
         return $attempt ? (array) $attempt : null;
     }
 
-    public function worstAttempt(int $teacherId, ?int $examId): ?array
+    public function worstAttempt(int $teacherId): ?array
     {
-        $attempt = $this->attemptsOf($teacherId, $examId)
+        $attempt = $this->attemptsOf($teacherId)
             ->orderBy('attempts.percentage')
             ->orderBy('attempts.submitted_at')
             ->first(self::ATTEMPT_COLUMNS);
@@ -54,9 +54,9 @@ class DashboardRepository implements DashboardRepositoryInterface
         return $attempt ? (array) $attempt : null;
     }
 
-    public function topStudent(int $teacherId, ?int $examId): ?array
+    public function topStudent(int $teacherId): ?array
     {
-        $student = $this->attemptsOf($teacherId, $examId)
+        $student = $this->attemptsOf($teacherId)
             ->groupBy('users.id', 'users.name')
             ->select('users.name as student_name')
             ->selectRaw('COUNT(attempts.id) as exams_count')
@@ -84,18 +84,6 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->get()
             ->map(fn (object $row) => (array) $row)
             ->all();
-    }
-
-    public function ranking(int $teacherId, ?int $examId, int $page, int $perPage): LengthAwarePaginator
-    {
-        return $this->attemptsOf($teacherId, $examId)
-            ->select(['attempts.id as attempt_id', ...self::ATTEMPT_COLUMNS])
-            ->selectRaw('ROW_NUMBER() OVER (ORDER BY attempts.percentage DESC, attempts.submitted_at ASC, attempts.id ASC) as position')
-            ->orderByDesc('attempts.percentage')
-            ->orderBy('attempts.submitted_at')
-            ->orderBy('attempts.id')
-            ->paginate($perPage, ['*'], 'page', $page)
-            ->through(fn (object $row) => (array) $row);
     }
 
     public function examsRanking(int $teacherId, int $page, int $perPage): LengthAwarePaginator
@@ -126,12 +114,11 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->through(fn (object $row) => (array) $row);
     }
 
-    private function attemptsOf(int $teacherId, ?int $examId): Builder
+    private function attemptsOf(int $teacherId): Builder
     {
         return DB::table('attempts')
             ->join('exams', 'exams.id', '=', 'attempts.exam_id')
             ->join('users', 'users.id', '=', 'attempts.student_id')
-            ->where('exams.teacher_id', $teacherId)
-            ->when($examId, fn (Builder $query) => $query->where('attempts.exam_id', $examId));
+            ->where('exams.teacher_id', $teacherId);
     }
 }

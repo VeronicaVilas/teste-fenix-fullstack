@@ -16,7 +16,6 @@ class DashboardSummaryResource extends JsonResource
         $summary = $this->resource;
 
         return [
-            'exam_id' => $summary['exam_id'],
             'total_attempts' => $summary['totals']['total_attempts'],
             'total_students' => $summary['totals']['total_students'],
             'average_percentage' => self::percentage($summary['totals']['average_percentage']),

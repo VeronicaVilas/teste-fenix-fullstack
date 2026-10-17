@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Http\Requests;
 
-use App\Http\Requests\DashboardFilterRequest;
 use App\Http\Requests\ListExamsRequest;
 use App\Http\Requests\PaginationRequest;
 use Tests\Concerns\BuildsFormRequests;
@@ -55,35 +54,6 @@ class PaginationRequestsTest extends TestCase
         $this->assertSame(
             ['status' => ['O status deve ser draft ou published.']],
             $this->validationErrors(ListExamsRequest::class, ['status' => 'archived'], 'GET'),
-        );
-    }
-
-    public function test_dashboard_filter_reads_exam_and_page(): void
-    {
-        $request = $this->validatedRequest(DashboardFilterRequest::class, ['exam_id' => '10', 'page' => '3'], 'GET');
-
-        $this->assertSame(10, $request->examId());
-        $this->assertSame(3, $request->page());
-    }
-
-    public function test_dashboard_filter_defaults(): void
-    {
-        $request = $this->validatedRequest(DashboardFilterRequest::class, [], 'GET');
-
-        $this->assertNull($request->examId());
-        $this->assertSame(1, $request->page());
-        $this->assertSame(10, $request->perPage());
-    }
-
-    public function test_dashboard_filter_rejects_invalid_exam(): void
-    {
-        $this->assertSame(
-            ['exam_id' => ['A prova deve ser informada pelo id numérico.']],
-            $this->validationErrors(DashboardFilterRequest::class, ['exam_id' => 'abc'], 'GET'),
-        );
-        $this->assertSame(
-            ['exam_id' => ['A prova deve ser informada pelo id numérico.']],
-            $this->validationErrors(DashboardFilterRequest::class, ['exam_id' => 0], 'GET'),
         );
     }
 }
