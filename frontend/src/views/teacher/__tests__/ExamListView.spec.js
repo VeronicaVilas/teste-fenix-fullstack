@@ -117,7 +117,7 @@ describe('ExamListView', () => {
     listExams.mockResolvedValue(page([draft], { last_page: 2, total: 11 }))
     const wrapper = await mountList()
 
-    await wrapper.findAll('.pagination button')[1].trigger('click')
+    await wrapper.find('[aria-label="Próxima página"]').trigger('click')
     await flushPromises()
 
     expect(listExams).toHaveBeenLastCalledWith(1, { status: null, page: 2 })

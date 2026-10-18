@@ -124,13 +124,13 @@ describe('StudentExamListView', () => {
     const wrapper = await mountList()
 
     expect(wrapper.findAll('tbody tr')).toHaveLength(10)
-    expect(wrapper.find('.pagination').text()).toContain('Página 1 de 2')
+    expect(wrapper.find('.pagination__info').text()).toBe('Mostrando 1–10 de 12')
 
-    await wrapper.findAll('.pagination button')[1].trigger('click')
+    await wrapper.find('[aria-label="Próxima página"]').trigger('click')
     expect(wrapper.findAll('tbody tr')).toHaveLength(2)
 
     await wrapper.findAll('.student-exams__filters button')[1].trigger('click')
-    expect(wrapper.find('.pagination').text()).toContain('Página 1 de 2')
+    expect(wrapper.find('.pagination__page.active').text()).toBe('1')
   })
 
   it('shows the empty state', async () => {
