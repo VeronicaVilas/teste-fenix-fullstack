@@ -13,7 +13,4 @@ use OpenApi\Attributes as OA;
     url: '/api/v1',
     description: 'Fênix API v1'
 )]
-abstract class Controller
-{
-    //
-}
+abstract class Controller {}
