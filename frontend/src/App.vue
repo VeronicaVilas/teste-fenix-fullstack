@@ -4,8 +4,10 @@ import { RouterView, useRoute } from 'vue-router'
 
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppTopbar from '@/components/AppTopbar.vue'
+import { useSessionStore } from '@/stores/session'
 
 const route = useRoute()
+const session = useSessionStore()
 
 const menuOpen = ref(false)
 
@@ -37,7 +39,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeOnEscape))
     <div class="app-content">
       <AppTopbar @open-menu="menuOpen = true" />
       <main class="app-main">
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+          <component :is="Component" :key="`${session.role}-${session.userId}`" />
+        </RouterView>
       </main>
     </div>
   </div>
