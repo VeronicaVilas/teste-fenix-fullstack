@@ -16,9 +16,9 @@ const error = ref('')
 
 onMounted(() => {
   if (session.isTeacher) {
-    router.replace({ name: 'teacher-exams' })
+    router.replace({ name: 'teacher-dashboard' })
   } else if (session.isStudent) {
-    router.replace({ name: 'student-exams' })
+    router.replace({ name: 'student-dashboard' })
   }
 })
 
@@ -35,7 +35,7 @@ async function enterAsTeacher() {
     }
 
     session.enterAs(ROLES.TEACHER, teacher)
-    router.push({ name: 'teacher-exams' })
+    router.push({ name: 'teacher-dashboard' })
   } catch (failure) {
     error.value = failure.message
   } finally {
@@ -59,7 +59,7 @@ async function chooseStudent() {
 
 function enterAsStudent(student) {
   session.enterAs(ROLES.STUDENT, student)
-  router.push({ name: 'student-exams' })
+  router.push({ name: 'student-dashboard' })
 }
 </script>
 

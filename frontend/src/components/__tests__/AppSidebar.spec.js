@@ -61,7 +61,7 @@ describe('AppSidebar', () => {
     ])
   })
 
-  it('switches to a student access and opens the student exams', async () => {
+  it('switches to a student access and opens the student dashboard', async () => {
     const { wrapper, router } = await mountSidebar()
 
     await wrapper.find('.access__current').trigger('click')
@@ -71,7 +71,20 @@ describe('AppSidebar', () => {
     expect(useSessionStore().userId).toBe(4)
     expect(wrapper.find('.access__menu').exists()).toBe(false)
     expect(wrapper.find('.access__current').text()).toContain('Bruno Lima')
-    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('student-exams'), { timeout: 5000 })
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('student-dashboard'), { timeout: 5000 })
+  })
+
+  it('switches to the teacher access and opens the teacher dashboard', async () => {
+    useSessionStore().enterAs(ROLES.STUDENT, students[0])
+    const { wrapper, router } = await mountSidebar('/student/exams')
+
+    await wrapper.find('.access__current').trigger('click')
+    await wrapper.findAll('.access__option')[0].trigger('click')
+    await flushPromises()
+
+    expect(useSessionStore().role).toBe(ROLES.TEACHER)
+    expect(wrapper.find('.access__current').text()).toContain('Professor Fênix')
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-dashboard'), { timeout: 5000 })
   })
 
   it('shows the teacher menu', async () => {

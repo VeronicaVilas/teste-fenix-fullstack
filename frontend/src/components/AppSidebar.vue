@@ -32,8 +32,8 @@ const menus = {
 }
 
 const homes = {
-  [ROLES.TEACHER]: { name: 'teacher-exams' },
-  [ROLES.STUDENT]: { name: 'student-exams' },
+  [ROLES.TEACHER]: { name: 'teacher-dashboard' },
+  [ROLES.STUDENT]: { name: 'student-dashboard' },
 }
 
 const menu = computed(() => menus[session.role] ?? [])

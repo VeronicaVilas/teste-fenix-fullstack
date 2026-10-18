@@ -46,7 +46,7 @@ describe('HomeView', () => {
     await flushPromises()
 
     expect(useSessionStore().isTeacher).toBe(true)
-    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-exams'), { timeout: 5000 })
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('teacher-dashboard'), { timeout: 5000 })
   })
 
   it('lists the students and enters as the chosen one', async () => {
@@ -66,7 +66,7 @@ describe('HomeView', () => {
     await flushPromises()
 
     expect(useSessionStore().userId).toBe(4)
-    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('student-exams'), { timeout: 5000 })
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('student-dashboard'), { timeout: 5000 })
   })
 
   it('shows the API error message', async () => {
