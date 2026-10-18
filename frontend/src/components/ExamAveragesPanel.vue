@@ -185,6 +185,7 @@ function attemptsLabel(count) {
 
 .exams {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
   margin: 0;
   padding: 0;
@@ -252,10 +253,8 @@ function attemptsLabel(count) {
 }
 
 .exam__info strong {
-  overflow: hidden;
   color: var(--color-navy);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .exam__info small,
@@ -264,6 +263,7 @@ function attemptsLabel(count) {
 }
 
 .exam__grade {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-end;

@@ -145,7 +145,7 @@ onMounted(() => load())
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
   gap: 0.85rem;
   margin: 0;
   padding: 0;
@@ -158,6 +158,7 @@ onMounted(() => load())
 }
 
 .rank-card {
+  min-width: 0;
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
@@ -211,10 +212,8 @@ onMounted(() => load())
 }
 
 .rank-card__info strong {
-  overflow: hidden;
   color: var(--color-navy);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .rank-card__info small,
@@ -223,6 +222,7 @@ onMounted(() => load())
 }
 
 .rank-card__grade {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
