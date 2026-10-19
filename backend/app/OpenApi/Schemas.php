@@ -348,4 +348,14 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
     ]
 )]
+#[OA\Schema(
+    schema: 'StudentDashboard',
+    required: ['answered_count', 'pending_count', 'average_percentage', 'best_percentage'],
+    properties: [
+        new OA\Property(property: 'answered_count', description: 'Provas que o aluno já respondeu', type: 'integer', example: 3),
+        new OA\Property(property: 'pending_count', description: 'Provas publicadas que o aluno ainda não respondeu', type: 'integer', example: 5),
+        new OA\Property(property: 'average_percentage', description: 'Média de acertos do aluno', type: 'string', nullable: true, example: '41.67'),
+        new OA\Property(property: 'best_percentage', description: 'Melhor percentual do aluno', type: 'string', nullable: true, example: '75.00'),
+    ]
+)]
 final class Schemas {}

@@ -741,13 +741,62 @@
                 ]
             }
         },
+        "/students/{student}/dashboard": {
+            "get": {
+                "tags": [
+                    "Exams (Aluno)"
+                ],
+                "summary": "Resumo de desempenho do aluno",
+                "description": "Provas respondidas e pendentes, média de acertos e melhor percentual. Calculado no banco com COUNT, AVG e MAX.",
+                "operationId": "studentDashboard",
+                "parameters": [
+                    {
+                        "name": "student",
+                        "in": "path",
+                        "description": "Id do aluno",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dashboard carregado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Dashboard carregado com sucesso."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/StudentDashboard"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
         "/students/{student}/exams": {
             "get": {
                 "tags": [
                     "Exams (Aluno)"
                 ],
                 "summary": "Lista as provas publicadas disponíveis para o aluno",
-                "description": "Mais recentes primeiro. Cada prova informa se este aluno já respondeu e, se sim, a nota.",
+                "description": "Mais recentes primeiro. Cada prova informa se este aluno já respondeu e, se sim, a nota. Aceita filtro por situação e busca pelo título.",
                 "operationId": "listAvailableExams",
                 "parameters": [
                     {
@@ -757,6 +806,29 @@
                         "required": true,
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "pending = ainda não respondidas; answered = já respondidas",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "answered"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Busca no título, sem diferenciar maiúsculas",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 255
                         }
                     },
                     {
@@ -1830,6 +1902,39 @@
                     },
                     "meta": {
                         "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                },
+                "type": "object"
+            },
+            "StudentDashboard": {
+                "required": [
+                    "answered_count",
+                    "pending_count",
+                    "average_percentage",
+                    "best_percentage"
+                ],
+                "properties": {
+                    "answered_count": {
+                        "description": "Provas que o aluno já respondeu",
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "pending_count": {
+                        "description": "Provas publicadas que o aluno ainda não respondeu",
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "average_percentage": {
+                        "description": "Média de acertos do aluno",
+                        "type": "string",
+                        "example": "41.67",
+                        "nullable": true
+                    },
+                    "best_percentage": {
+                        "description": "Melhor percentual do aluno",
+                        "type": "string",
+                        "example": "75.00",
+                        "nullable": true
                     }
                 },
                 "type": "object"
