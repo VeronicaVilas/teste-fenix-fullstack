@@ -1,8 +1,13 @@
-import { describe, expect, it } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ExamAveragesPanel from '../ExamAveragesPanel.vue'
+import { getExamAverages } from '@/services/dashboardService'
+import { ROLES, useSessionStore } from '@/stores/session'
+
+vi.mock('@/services/dashboardService', () => ({ getExamAverages: vi.fn() }))
 
 const exams = [
   { id: 10, title: 'Prova de Geografia', attempts_count: 3, average_percentage: '86.00' },
@@ -10,16 +15,11 @@ const exams = [
   { id: 12, title: 'Gramática', attempts_count: 0, average_percentage: null },
 ]
 
-function manyExams(count) {
-  return Array.from({ length: count }, (_, index) => ({
-    id: index + 1,
-    title: `Prova ${index + 1}`,
-    attempts_count: 1,
-    average_percentage: '50.00',
-  }))
+function page(items, meta = {}) {
+  return { items, meta: { current_page: 1, last_page: 1, per_page: 4, total: items.length, ...meta } }
 }
 
-function mountPanel(list = exams) {
+async function mountPanel() {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -28,13 +28,30 @@ function mountPanel(list = exams) {
     ],
   })
 
-  return mount(ExamAveragesPanel, { props: { exams: list }, global: { plugins: [router] } })
+  const wrapper = mount(ExamAveragesPanel, { global: { plugins: [router] } })
+  await flushPromises()
+  return wrapper
 }
 
 describe('ExamAveragesPanel', () => {
-  it('lists each exam with its average as a grade', () => {
-    const rows = mountPanel().findAll('.exam')
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+    useSessionStore().enterAs(ROLES.TEACHER, { id: 1, name: 'Professor Fênix' })
+    vi.clearAllMocks()
+  })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('loads the first page from the API and shows each average as a grade', async () => {
+    getExamAverages.mockResolvedValue(page(exams))
+
+    const wrapper = await mountPanel()
+    const rows = wrapper.findAll('.exam')
+
+    expect(getExamAverages).toHaveBeenCalledWith(1, { page: 1, perPage: 4, search: '' })
     expect(rows).toHaveLength(3)
     expect(rows[0].find('.exam__info strong').text()).toBe('Prova de Geografia')
     expect(rows[0].find('.exam__info small').text()).toBe('3 tentativas')
@@ -44,57 +61,71 @@ describe('ExamAveragesPanel', () => {
     expect(rows[2].find('.exam__grade strong').text()).toBe('—')
   })
 
-  it('links each exam to its detail and the header to all exams', () => {
-    const wrapper = mountPanel()
+  it('links each exam to its detail and the header to all exams', async () => {
+    getExamAverages.mockResolvedValue(page(exams))
+
+    const wrapper = await mountPanel()
 
     expect(wrapper.find('.exam').attributes('href')).toBe('/teacher/exams/10')
     expect(wrapper.find('.panel__link').attributes('href')).toBe('/teacher/exams')
   })
 
-  it('searches by title', async () => {
-    const wrapper = mountPanel()
+  it('changes page through the API', async () => {
+    getExamAverages.mockResolvedValue(page(exams, { last_page: 2, total: 6 }))
+    const wrapper = await mountPanel()
 
-    await wrapper.find('input[type="search"]').setValue('histó')
-
-    expect(wrapper.findAll('.exam')).toHaveLength(1)
-    expect(wrapper.find('.exam__info strong').text()).toBe('Prova de História')
-  })
-
-  it('has no attempts filter', () => {
-    expect(mountPanel().find('select').exists()).toBe(false)
-  })
-
-  it('shows four exams per page and changes page', async () => {
-    const wrapper = mountPanel(manyExams(6))
-
-    expect(wrapper.findAll('.exam')).toHaveLength(4)
     expect(wrapper.findAll('.pagination button').map((button) => button.text())).toEqual(['1', '2'])
 
+    getExamAverages.mockResolvedValue(page([{ id: 15, title: 'Prova 5', attempts_count: 0, average_percentage: null }], { current_page: 2, last_page: 2, total: 6 }))
     await wrapper.findAll('.pagination button')[1].trigger('click')
+    await flushPromises()
 
-    expect(wrapper.findAll('.exam').map((row) => row.find('strong').text())).toEqual(['Prova 5', 'Prova 6'])
+    expect(getExamAverages).toHaveBeenLastCalledWith(1, { page: 2, perPage: 4, search: '' })
+    expect(wrapper.findAll('.exam').map((row) => row.find('strong').text())).toEqual(['Prova 5'])
     expect(wrapper.find('.pagination button.active').text()).toBe('2')
   })
 
-  it('goes back to the first page when searching', async () => {
-    const wrapper = mountPanel(manyExams(6))
+  it('hides pagination with a single page', async () => {
+    getExamAverages.mockResolvedValue(page(exams))
 
-    await wrapper.findAll('.pagination button')[1].trigger('click')
-    await wrapper.find('input[type="search"]').setValue('Prova 1')
-
-    expect(wrapper.findAll('.exam').map((row) => row.find('strong').text())).toEqual(['Prova 1'])
-    expect(wrapper.find('.pagination').exists()).toBe(false)
+    expect((await mountPanel()).find('.pagination').exists()).toBe(false)
   })
 
-  it('hides pagination with a single page', () => {
-    expect(mountPanel().find('.pagination').exists()).toBe(false)
+  it('searches on the API from the first page after the user stops typing', async () => {
+    getExamAverages.mockResolvedValue(page(exams))
+    const wrapper = await mountPanel()
+    vi.useFakeTimers()
+
+    await wrapper.find('input[type="search"]').setValue('hist')
+    await wrapper.find('input[type="search"]').setValue('histó')
+    expect(getExamAverages).toHaveBeenCalledTimes(1)
+
+    getExamAverages.mockResolvedValue(page([exams[1]]))
+    await vi.advanceTimersByTimeAsync(300)
+    await flushPromises()
+
+    expect(getExamAverages).toHaveBeenCalledTimes(2)
+    expect(getExamAverages).toHaveBeenLastCalledWith(1, { page: 1, perPage: 4, search: 'histó' })
+    expect(wrapper.findAll('.exam').map((row) => row.find('strong').text())).toEqual(['Prova de História'])
   })
 
-  it('shows an empty state when nothing matches', async () => {
-    const wrapper = mountPanel()
+  it('shows the empty states', async () => {
+    getExamAverages.mockResolvedValue(page([]))
+    const wrapper = await mountPanel()
 
+    expect(wrapper.text()).toContain('Nenhuma prova publicada ainda.')
+
+    vi.useFakeTimers()
     await wrapper.find('input[type="search"]').setValue('química')
+    await vi.advanceTimersByTimeAsync(300)
+    await flushPromises()
 
     expect(wrapper.text()).toContain('Nenhuma prova encontrada.')
+  })
+
+  it('shows the API error', async () => {
+    getExamAverages.mockRejectedValue({ status: 0, message: 'Não foi possível conectar ao servidor.', errors: {} })
+
+    expect((await mountPanel()).find('.panel__empty--error').text()).toBe('Não foi possível conectar ao servidor.')
   })
 })
