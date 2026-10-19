@@ -138,7 +138,7 @@ describe('ExamResultView', () => {
     const wrapper = await mountResult()
 
     expect(wrapper.text()).toContain('Você ainda não respondeu esta prova.')
-    expect(wrapper.find('a.button--primary').attributes('href')).toBe('/student/exams/10')
+    expect(wrapper.find('a.button-primary').attributes('href')).toBe('/student/exams/10')
   })
 
   it('shows other API errors', async () => {

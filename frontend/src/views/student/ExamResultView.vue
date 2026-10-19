@@ -4,6 +4,9 @@ import { RouterLink } from 'vue-router'
 import { ArrowLeft, CircleCheck, CircleX, GraduationCap, Percent } from 'lucide-vue-next'
 
 import AlertMessage from '@/components/AlertMessage.vue'
+import BasePanel from '@/components/BasePanel.vue'
+import PageHeader from '@/components/PageHeader.vue'
+import StatCard from '@/components/StatCard.vue'
 import { getAttemptResult } from '@/services/studentExamService'
 import { useSessionStore } from '@/stores/session'
 
@@ -67,82 +70,51 @@ onMounted(async () => {
 
 <template>
   <section class="result">
-    <p v-if="loading" class="result__state">Carregando resultado...</p>
+    <p v-if="loading" class="empty-state">Carregando resultado...</p>
 
-    <div v-else-if="notAnswered" class="result__state">
+    <div v-else-if="notAnswered" class="empty-state">
       <p>Você ainda não respondeu esta prova.</p>
-      <RouterLink :to="{ name: 'student-exam-take', params: { id } }" class="button button--primary">Fazer prova</RouterLink>
+      <RouterLink :to="{ name: 'student-exam-take', params: { id } }" class="button-primary">Fazer prova</RouterLink>
     </div>
 
     <AlertMessage v-else-if="error" :message="error" />
 
     <template v-else>
-      <header class="page-header">
-        <div class="page-header__text">
-          <h1>{{ result.exam.title }}</h1>
-          <p class="page-header__subtitle">Enviada em {{ formatDate(result.submitted_at) }}</p>
-        </div>
-
-        <RouterLink :to="{ name: 'student-exams' }" class="button-secondary">
-          <ArrowLeft aria-hidden="true" />
-          Voltar
-        </RouterLink>
-      </header>
+      <PageHeader :title="result.exam.title" :subtitle="`Enviada em ${formatDate(result.submitted_at)}`">
+        <template #actions>
+          <RouterLink :to="{ name: 'student-exams' }" class="button-secondary">
+            <ArrowLeft aria-hidden="true" />
+            Voltar
+          </RouterLink>
+        </template>
+      </PageHeader>
 
       <div class="stats">
-        <article class="stat stat--grade">
-          <span class="stat__icon"><GraduationCap aria-hidden="true" /></span>
-          <div class="stat__body">
-            <h2>Nota</h2>
-            <p class="stat__value">{{ formatGrade(result.percentage) }}</p>
-          </div>
-        </article>
-
-        <article class="stat stat--percentage">
-          <span class="stat__icon"><Percent aria-hidden="true" /></span>
-          <div class="stat__body">
-            <h2>Aproveitamento</h2>
-            <p class="stat__value">{{ formatPercentage(result.percentage) }}</p>
-          </div>
-        </article>
-
-        <article class="stat stat--right">
-          <span class="stat__icon"><CircleCheck aria-hidden="true" /></span>
-          <div class="stat__body">
-            <h2>Acertos</h2>
-            <p class="stat__value">{{ result.score }}</p>
-          </div>
-        </article>
-
-        <article class="stat stat--wrong">
-          <span class="stat__icon"><CircleX aria-hidden="true" /></span>
-          <div class="stat__body">
-            <h2>Erros</h2>
-            <p class="stat__value">{{ wrongCount }}</p>
-          </div>
-        </article>
+        <StatCard label="Nota" :icon="GraduationCap" :value="formatGrade(result.percentage)" />
+        <StatCard label="Aproveitamento" :icon="Percent" tone="navy" :value="formatPercentage(result.percentage)" />
+        <StatCard label="Acertos" :icon="CircleCheck" tone="green" :value="result.score" />
+        <StatCard label="Erros" :icon="CircleX" tone="red" :value="wrongCount" />
       </div>
 
-      <section class="panel">
-        <header class="panel__header">
-          <div>
-            <h2>Revisão da prova</h2>
-            <p class="summary__score">
-              {{ result.score }} de {{ result.total_questions }} acertos — {{ formatPercentage(result.percentage) }}
-            </p>
-          </div>
+      <BasePanel title="Revisão da prova">
+        <template #subtitle>
+          <p class="summary__score">
+            {{ result.score }} de {{ result.total_questions }} acertos — {{ formatPercentage(result.percentage) }}
+          </p>
+        </template>
 
+        <template #actions>
           <label class="filter" :class="{ 'filter--active': onlyWrong }">
             <input v-model="onlyWrong" type="checkbox" />
             Mostrar só as que errei
           </label>
-        </header>
+        </template>
 
         <div class="summary__bar" role="progressbar" :aria-valuenow="percentage" aria-valuemin="0" aria-valuemax="100">
           <span :style="{ width: `${percentage}%` }" />
         </div>
 
-        <p v-if="visibleQuestions.length === 0" class="result__state">Você acertou todas as questões!</p>
+        <p v-if="visibleQuestions.length === 0" class="empty-state">Você acertou todas as questões!</p>
 
         <ol class="questions">
           <li
@@ -175,173 +147,17 @@ onMounted(async () => {
             </ul>
           </li>
         </ol>
-      </section>
+      </BasePanel>
     </template>
   </section>
 </template>
 
 <style scoped>
-.result__state {
-  margin: 0;
-  padding: 2rem;
-  text-align: center;
-  color: var(--color-muted);
-  background: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  border-radius: 12px;
-}
-
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.75rem;
-}
-
-.page-header__text {
-  min-width: 0;
-}
-
-.page-header h1 {
-  margin: 0;
-  font-size: 2rem;
-  color: var(--color-navy);
-}
-
-.page-header__subtitle {
-  margin: 0.35rem 0 0;
-  color: var(--color-muted);
-}
-
-.button-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  color: var(--color-navy);
-  font-weight: 600;
-  text-decoration: none;
-  transition:
-    border-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.button-secondary:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary-dark);
-}
-
-.button-secondary svg {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
-.button {
-  display: inline-block;
-  padding: 0.75rem 1.25rem;
-  border-radius: 12px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.button--primary {
-  background: var(--color-primary);
-  color: #fff;
-}
-
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
-}
-
-.stat {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-}
-
-.stat__icon {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 12px;
-}
-
-.stat__icon svg {
-  width: 1.4rem;
-  height: 1.4rem;
-}
-
-.stat--grade .stat__icon {
-  background: var(--color-primary-soft);
-  color: var(--color-primary-dark);
-}
-
-.stat--percentage .stat__icon {
-  background: #e8edf7;
-  color: var(--color-navy);
-}
-
-.stat--right .stat__icon {
-  background: #ebfbee;
-  color: var(--color-success);
-}
-
-.stat--wrong .stat__icon {
-  background: #fff5f5;
-  color: var(--color-danger);
-}
-
-.stat h2 {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--color-muted);
-}
-
-.stat__value {
-  margin: 0.35rem 0 0;
-  font-size: 1.9rem;
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--color-navy);
-}
-
-.panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.5rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-}
-
-.panel__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.panel__header h2 {
-  margin: 0;
-  font-size: 1.2rem;
-  color: var(--color-navy);
 }
 
 .summary__score {
@@ -472,18 +288,6 @@ onMounted(async () => {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 10px;
-}
-
-.option__letter {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  background: #e8edf7;
-  border-radius: 8px;
-  color: var(--color-navy);
-  font-weight: 700;
 }
 
 .option__text {

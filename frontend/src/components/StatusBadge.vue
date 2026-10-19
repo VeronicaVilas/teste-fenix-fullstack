@@ -5,7 +5,12 @@ const props = defineProps({
   status: { type: String, required: true },
 })
 
-const labels = { draft: 'Rascunho', published: 'Publicada' }
+const labels = {
+  draft: 'Rascunho',
+  published: 'Publicada',
+  pending: 'A fazer',
+  answered: 'Realizada',
+}
 
 const label = computed(() => labels[props.status] ?? props.status)
 </script>
@@ -21,6 +26,7 @@ const label = computed(() => labels[props.status] ?? props.status)
   border-radius: 999px;
   font-size: 0.85rem;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .badge--draft {
@@ -28,8 +34,14 @@ const label = computed(() => labels[props.status] ?? props.status)
   color: var(--color-muted);
 }
 
-.badge--published {
+.badge--published,
+.badge--answered {
   background: #ebfbee;
   color: var(--color-success);
+}
+
+.badge--pending {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-dark);
 }
 </style>

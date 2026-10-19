@@ -230,16 +230,7 @@ function errorFor(key) {
 }
 
 .option__letter {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
   margin-top: 0.3rem;
-  background: #e8edf7;
-  border-radius: 8px;
-  color: var(--color-navy);
-  font-weight: 700;
 }
 
 .option--correct .option__letter {

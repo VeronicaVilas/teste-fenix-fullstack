@@ -4,6 +4,8 @@ import { RouterLink, useRouter } from 'vue-router'
 import { ArrowLeft, Plus, Save } from 'lucide-vue-next'
 
 import AlertMessage from '@/components/AlertMessage.vue'
+import BasePanel from '@/components/BasePanel.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import QuestionEditor from '@/components/QuestionEditor.vue'
 import { createExam, getExam, updateExam } from '@/services/examService'
 import { useSessionStore } from '@/stores/session'
@@ -135,38 +137,32 @@ onMounted(() => {
 
 <template>
   <section class="exam-form">
-    <header class="page-header">
-      <div>
-        <h1>{{ isEditing ? 'Editar prova' : 'Criar prova' }}</h1>
-        <p class="page-header__subtitle">
-          {{ isEditing ? 'Ajuste o rascunho antes de publicar.' : 'Monte as questões e marque a alternativa correta de cada uma.' }}
-        </p>
-      </div>
-
-      <RouterLink
-        :to="isEditing ? { name: 'teacher-exam-detail', params: { id } } : { name: 'teacher-exams' }"
-        class="button-secondary"
-      >
-        <ArrowLeft aria-hidden="true" />
-        Voltar
-      </RouterLink>
-    </header>
+    <PageHeader
+      :title="isEditing ? 'Editar prova' : 'Criar prova'"
+      :subtitle="isEditing ? 'Ajuste o rascunho antes de publicar.' : 'Monte as questões e marque a alternativa correta de cada uma.'"
+    >
+      <template #actions>
+        <RouterLink
+          :to="isEditing ? { name: 'teacher-exam-detail', params: { id } } : { name: 'teacher-exams' }"
+          class="button-secondary"
+        >
+          <ArrowLeft aria-hidden="true" />
+          Voltar
+        </RouterLink>
+      </template>
+    </PageHeader>
 
     <AlertMessage :message="message" />
 
-    <p v-if="loading" class="exam-form__state">Carregando prova...</p>
+    <p v-if="loading" class="empty-state">Carregando prova...</p>
 
-    <div v-else-if="notFound" class="exam-form__state">
+    <div v-else-if="notFound" class="empty-state">
       <p>Prova não encontrada.</p>
       <RouterLink :to="{ name: 'teacher-exams' }">Ir para a lista de provas</RouterLink>
     </div>
 
     <form v-else novalidate @submit.prevent="submit">
-      <div class="panel">
-        <header class="panel__header">
-          <h2>Informações da prova</h2>
-          <p>Título e uma descrição opcional para os alunos.</p>
-        </header>
+      <BasePanel tag="div" title="Informações da prova" subtitle="Título e uma descrição opcional para os alunos.">
 
         <label class="field">
           <span>Título</span>
@@ -179,16 +175,12 @@ onMounted(() => {
           <textarea v-model="form.description" rows="3" maxlength="2000" placeholder="Instruções ou assuntos cobrados" />
           <small v-if="errorFor('description')" class="field__error">{{ errorFor('description') }}</small>
         </label>
-      </div>
+      </BasePanel>
 
-      <div class="panel">
-        <header class="panel__header panel__header--row">
-          <div>
-            <h2>Questões</h2>
-            <p>De 2 a 5 alternativas por questão, com apenas uma correta.</p>
-          </div>
+      <BasePanel tag="div" title="Questões" subtitle="De 2 a 5 alternativas por questão, com apenas uma correta.">
+        <template #actions>
           <span class="panel__count">{{ form.questions.length }} {{ form.questions.length === 1 ? 'questão' : 'questões' }}</span>
-        </header>
+        </template>
 
         <small v-if="errorFor('questions')" class="field__error">{{ errorFor('questions') }}</small>
 
@@ -201,14 +193,14 @@ onMounted(() => {
           :removable="form.questions.length > 1"
           @remove="removeQuestion(index)"
         />
-      </div>
+      </BasePanel>
 
       <div class="exam-form__actions">
         <button type="button" class="button-outline" @click="addQuestion">
           <Plus aria-hidden="true" />
           Questão
         </button>
-        <button type="submit" class="primary" :disabled="saving">
+        <button type="submit" class="button-primary" :disabled="saving">
           <Save aria-hidden="true" />
           {{ saving ? 'Salvando...' : 'Salvar prova' }}
         </button>
@@ -218,94 +210,10 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.75rem;
-}
-
-.page-header h1 {
-  margin: 0;
-  font-size: 2rem;
-  color: var(--color-navy);
-}
-
-.page-header__subtitle {
-  margin: 0.35rem 0 0;
-  color: var(--color-muted);
-}
-
-.button-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  color: var(--color-navy);
-  font-weight: 600;
-  text-decoration: none;
-  transition:
-    border-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.button-secondary:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary-dark);
-}
-
-.button-secondary svg,
-button svg {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
-.exam-form__state {
-  padding: 2rem;
-  text-align: center;
-  color: var(--color-muted);
-  background: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  border-radius: 12px;
-}
-
 form {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-}
-
-.panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-  padding: 1.5rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-}
-
-.panel__header h2 {
-  margin: 0;
-  font-size: 1.2rem;
-  color: var(--color-navy);
-}
-
-.panel__header p {
-  margin: 0.3rem 0 0;
-  color: var(--color-muted);
-}
-
-.panel__header--row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
 }
 
 .panel__count {
@@ -355,46 +263,5 @@ form {
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
-}
-
-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 12px;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.button-outline {
-  background: var(--color-surface);
-  border: 1px dashed var(--color-primary);
-  color: var(--color-primary-dark);
-}
-
-.button-outline:hover {
-  background: var(--color-primary-soft);
-}
-
-button.primary {
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
-  color: #fff;
-}
-
-button.primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 </style>

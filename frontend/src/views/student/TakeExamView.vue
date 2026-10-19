@@ -5,6 +5,7 @@ import { ArrowLeft, Send } from 'lucide-vue-next'
 
 import AlertMessage from '@/components/AlertMessage.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import { getAvailableExam, submitAttempt } from '@/services/studentExamService'
 import { useSessionStore } from '@/stores/session'
 
@@ -75,9 +76,9 @@ onMounted(async () => {
 
 <template>
   <section class="take-exam">
-    <p v-if="loading" class="take-exam__state">Carregando prova...</p>
+    <p v-if="loading" class="empty-state">Carregando prova...</p>
 
-    <div v-else-if="notFound" class="take-exam__state">
+    <div v-else-if="notFound" class="empty-state">
       <p>Prova não encontrada.</p>
       <RouterLink :to="{ name: 'student-exams' }">Ir para minhas provas</RouterLink>
     </div>
@@ -85,17 +86,14 @@ onMounted(async () => {
     <AlertMessage v-else-if="error" :message="error" />
 
     <template v-else-if="!exam.answered">
-      <header class="page-header">
-        <div class="page-header__text">
-          <h1>{{ exam.title }}</h1>
-          <p v-if="exam.description" class="page-header__subtitle">{{ exam.description }}</p>
-        </div>
-
-        <RouterLink :to="{ name: 'student-exams' }" class="button-secondary">
-          <ArrowLeft aria-hidden="true" />
-          Voltar
-        </RouterLink>
-      </header>
+      <PageHeader :title="exam.title" :subtitle="exam.description ?? ''">
+        <template #actions>
+          <RouterLink :to="{ name: 'student-exams' }" class="button-secondary">
+            <ArrowLeft aria-hidden="true" />
+            Voltar
+          </RouterLink>
+        </template>
+      </PageHeader>
 
       <AlertMessage type="info" message="Você só pode enviar esta prova uma vez." />
 
@@ -131,7 +129,7 @@ onMounted(async () => {
         </div>
         <button
           type="button"
-          class="primary"
+          class="button-primary"
           :disabled="!allAnswered || submitting"
           :title="allAnswered ? 'Enviar respostas' : 'Responda todas as questões para enviar'"
           @click="confirmingSubmit = true"
@@ -155,66 +153,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.take-exam__state {
-  padding: 2rem;
-  text-align: center;
-  color: var(--color-muted);
-  background: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  border-radius: 12px;
-}
-
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.75rem;
-}
-
-.page-header__text {
-  min-width: 0;
-}
-
-.page-header h1 {
-  margin: 0;
-  font-size: 2rem;
-  color: var(--color-navy);
-}
-
-.page-header__subtitle {
-  margin: 0.35rem 0 0;
-  color: var(--color-muted);
-}
-
-.button-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  color: var(--color-navy);
-  font-weight: 600;
-  text-decoration: none;
-  transition:
-    border-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.button-secondary:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary-dark);
-}
-
-.button-secondary svg,
-button svg {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
 .questions {
   display: grid;
   gap: 1rem;
@@ -289,21 +227,6 @@ button svg {
   pointer-events: none;
 }
 
-.option__letter {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  background: #e8edf7;
-  border-radius: 8px;
-  color: var(--color-navy);
-  font-weight: 700;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease;
-}
-
 .option__text {
   flex: 1;
   min-width: 0;
@@ -364,34 +287,5 @@ button svg {
   background: linear-gradient(90deg, var(--color-primary), #fdba74);
   border-radius: 999px;
   transition: width 0.3s ease;
-}
-
-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border: none;
-  border-radius: 12px;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-button.primary {
-  background: var(--color-primary);
-  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
-  color: #fff;
-  transition: background 0.2s ease;
-}
-
-button.primary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
-}
-
-button:disabled {
-  opacity: 0.5;
-  box-shadow: none;
-  cursor: not-allowed;
 }
 </style>

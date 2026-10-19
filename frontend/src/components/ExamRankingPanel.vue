@@ -1,6 +1,8 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
+import BasePanel from '@/components/BasePanel.vue'
+import PanelPagination from '@/components/PanelPagination.vue'
 import { getExamsRanking } from '@/services/dashboardService'
 import { useSessionStore } from '@/stores/session'
 
@@ -12,8 +14,6 @@ const items = ref([])
 const meta = ref({ current_page: 1, last_page: 1, per_page: PER_PAGE, total: 0 })
 const loading = ref(false)
 const error = ref('')
-
-const pages = computed(() => Array.from({ length: meta.value.last_page }, (_, index) => index + 1))
 
 async function load(page = 1) {
   loading.value = true
@@ -42,20 +42,16 @@ onMounted(() => load())
 </script>
 
 <template>
-  <section class="panel">
-    <header class="panel__header">
-      <div>
-        <h2>Ranking das médias das provas</h2>
-        <p>Confira as provas com melhor média de desempenho</p>
-      </div>
+  <BasePanel title="Ranking das médias das provas" subtitle="Confira as provas com melhor média de desempenho">
+    <template #actions>
       <span class="panel__page">Página {{ meta.current_page }}</span>
-    </header>
+    </template>
 
     <p v-if="error" class="panel__empty panel__empty--error">{{ error }}</p>
 
     <p v-else-if="!loading && items.length === 0" class="panel__empty">Nenhuma prova respondida ainda.</p>
 
-    <ol v-else class="grid" :class="{ 'grid--loading': loading }">
+    <ol v-else class="grid" :class="{ 'list-loading': loading }">
       <li v-for="item in items" :key="item.exam_id" class="rank-card">
         <span class="rank-card__position" :class="`rank-card__position--${Math.min(item.position, 4)}`">
           {{ item.position }}
@@ -79,50 +75,20 @@ onMounted(() => load())
       </li>
     </ol>
 
-    <nav v-if="meta.last_page > 1" class="pagination" aria-label="Páginas do ranking">
-      <button
-        v-for="page in pages"
-        :key="page"
-        type="button"
-        :class="{ active: page === meta.current_page }"
-        :aria-current="page === meta.current_page ? 'page' : undefined"
-        :disabled="loading"
-        @click="page !== meta.current_page && load(page)"
-      >
-        {{ page }}
-      </button>
-    </nav>
-  </section>
+    <PanelPagination
+      :current-page="meta.current_page"
+      :last-page="meta.last_page"
+      :disabled="loading"
+      label="Páginas do ranking"
+      @change="load"
+    />
+  </BasePanel>
 </template>
 
 <style scoped>
-.panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.5rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-}
 
-.panel__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
 
-.panel__header h2 {
-  margin: 0;
-  font-size: 1.2rem;
-  color: var(--color-navy);
-}
 
-.panel__header p {
-  margin: 0.3rem 0 0;
-  color: var(--color-muted);
-}
 
 .panel__page {
   padding: 0.5rem 0.9rem;
@@ -132,16 +98,7 @@ onMounted(() => load())
   white-space: nowrap;
 }
 
-.panel__empty {
-  margin: 0;
-  padding: 1.5rem;
-  text-align: center;
-  color: var(--color-muted);
-}
 
-.panel__empty--error {
-  color: var(--color-danger);
-}
 
 .grid {
   display: grid;
@@ -150,12 +107,8 @@ onMounted(() => load())
   margin: 0;
   padding: 0;
   list-style: none;
-  transition: opacity 0.2s ease;
 }
 
-.grid--loading {
-  opacity: 0.5;
-}
 
 .rank-card {
   min-width: 0;
@@ -260,32 +213,7 @@ onMounted(() => load())
   color: var(--color-navy);
 }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-}
 
-.pagination button {
-  min-width: 2.4rem;
-  height: 2.4rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  color: var(--color-muted);
-  font: inherit;
-  cursor: pointer;
-}
 
-.pagination button:hover:not(.active) {
-  border-color: var(--color-primary);
-  color: var(--color-primary-dark);
-}
 
-.pagination button.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #fff;
-  font-weight: 700;
-}
 </style>
