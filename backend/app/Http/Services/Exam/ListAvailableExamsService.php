@@ -2,6 +2,7 @@
 
 namespace App\Http\Services\Exam;
 
+use App\Enums\StudentExamStatus;
 use App\Interfaces\ExamRepositoryInterface;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -10,8 +11,8 @@ final readonly class ListAvailableExamsService
 {
     public function __construct(private ExamRepositoryInterface $examRepository) {}
 
-    public function handle(User $student, int $perPage): LengthAwarePaginator
+    public function handle(User $student, ?StudentExamStatus $status, ?string $search, int $perPage): LengthAwarePaginator
     {
-        return $this->examRepository->paginatePublishedForStudent($student, $perPage);
+        return $this->examRepository->paginatePublishedForStudent($student, $status, $search, $perPage);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Repositories;
 
 use App\Enums\ExamStatus;
+use App\Enums\StudentExamStatus;
 use App\Interfaces\ExamRepositoryInterface;
 use App\Models\Exam;
 use App\Models\User;
@@ -93,12 +94,17 @@ class ExamRepository implements ExamRepositoryInterface
             ->paginate($perPage);
     }
 
-    public function paginatePublishedForStudent(User $student, int $perPage): LengthAwarePaginator
+    public function paginatePublishedForStudent(User $student, ?StudentExamStatus $status, ?string $search, int $perPage): LengthAwarePaginator
     {
+        $studentAttempts = fn ($query) => $query->where('student_id', $student->id);
+
         return Exam::query()
             ->published()
             ->withCount('questions')
-            ->with(['attempts' => fn ($query) => $query->where('student_id', $student->id)])
+            ->with(['attempts' => $studentAttempts])
+            ->when($status === StudentExamStatus::Answered, fn ($query) => $query->whereHas('attempts', $studentAttempts))
+            ->when($status === StudentExamStatus::Pending, fn ($query) => $query->whereDoesntHave('attempts', $studentAttempts))
+            ->when($search, fn ($query) => $query->whereLike('title', '%'.addcslashes($search, '%_\\').'%'))
             ->latest('published_at')
             ->latest('id')
             ->paginate($perPage);

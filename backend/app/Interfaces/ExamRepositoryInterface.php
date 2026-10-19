@@ -3,6 +3,7 @@
 namespace App\Interfaces;
 
 use App\Enums\ExamStatus;
+use App\Enums\StudentExamStatus;
 use App\Models\Exam;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -31,7 +32,7 @@ interface ExamRepositoryInterface
 
     public function paginateByTeacher(User $teacher, ?ExamStatus $status, int $perPage): LengthAwarePaginator;
 
-    public function paginatePublishedForStudent(User $student, int $perPage): LengthAwarePaginator;
+    public function paginatePublishedForStudent(User $student, ?StudentExamStatus $status, ?string $search, int $perPage): LengthAwarePaginator;
 
     public function findPublishedWithQuestions(int $examId): Exam;
 }

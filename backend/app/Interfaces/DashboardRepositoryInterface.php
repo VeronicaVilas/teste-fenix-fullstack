@@ -23,4 +23,9 @@ interface DashboardRepositoryInterface
     public function examStats(int $teacherId): array;
 
     public function examsRanking(int $teacherId, int $page, int $perPage): LengthAwarePaginator;
+
+    /**
+     * @return array{answered_count: int, pending_count: int, average_percentage: float|string|null, best_percentage: float|string|null}
+     */
+    public function studentSummary(int $studentId): array;
 }

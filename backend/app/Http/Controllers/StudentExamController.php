@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\PaginationRequest;
+use App\Http\Requests\ListAvailableExamsRequest;
 use App\Http\Resources\AvailableExamResource;
 use App\Http\Resources\StudentExamResource;
 use App\Http\Services\Exam\GetAvailableExamService;
@@ -16,11 +16,11 @@ class StudentExamController extends Controller
 {
     use HttpResponses;
 
-    public function index(PaginationRequest $request, User $student, ListAvailableExamsService $service): JsonResponse
+    public function index(ListAvailableExamsRequest $request, User $student, ListAvailableExamsService $service): JsonResponse
     {
         return $this->paginated(
             'Provas disponíveis listadas com sucesso.',
-            $service->handle($student, $request->perPage()),
+            $service->handle($student, $request->status(), $request->search(), $request->perPage()),
             AvailableExamResource::class,
         );
     }

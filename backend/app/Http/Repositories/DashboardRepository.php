@@ -114,6 +114,32 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->through(fn (object $row) => (array) $row);
     }
 
+    public function studentSummary(int $studentId): array
+    {
+        $pendingCount = DB::table('exams')
+            ->where('exams.status', ExamStatus::Published->value)
+            ->whereNotExists(fn (Builder $query) => $query
+                ->selectRaw('1')
+                ->from('attempts')
+                ->whereColumn('attempts.exam_id', 'exams.id')
+                ->where('attempts.student_id', $studentId))
+            ->count();
+
+        $attempts = DB::table('attempts')
+            ->where('student_id', $studentId)
+            ->selectRaw('COUNT(*) as answered_count')
+            ->selectRaw('ROUND(AVG(percentage), 2) as average_percentage')
+            ->selectRaw('MAX(percentage) as best_percentage')
+            ->first();
+
+        return [
+            'answered_count' => (int) $attempts->answered_count,
+            'pending_count' => $pendingCount,
+            'average_percentage' => $attempts->average_percentage,
+            'best_percentage' => $attempts->best_percentage,
+        ];
+    }
+
     private function attemptsOf(int $teacherId): Builder
     {
         return DB::table('attempts')

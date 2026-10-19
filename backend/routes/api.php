@@ -4,6 +4,7 @@ use App\Http\Controllers\AttemptController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\StudentExamController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,7 @@ Route::prefix('teachers/{teacher}')->group(function () {
 });
 
 Route::prefix('students/{student}')->group(function () {
+    Route::get('dashboard', [StudentDashboardController::class, 'summary']);
     Route::get('exams', [StudentExamController::class, 'index']);
     Route::get('exams/{exam}', [StudentExamController::class, 'show'])->whereNumber('exam');
     Route::post('exams/{exam}/attempt', [AttemptController::class, 'store'])->whereNumber('exam');
