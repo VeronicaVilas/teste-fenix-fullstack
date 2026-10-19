@@ -49,6 +49,16 @@ class DashboardRepositoryTest extends TestCase
         $this->assertSame([1, 'published'], $queries[0]['bindings']);
     }
 
+    public function test_student_summary_counts_pending_exams_and_aggregates_attempts(): void
+    {
+        $queries = $this->captureQueries(fn () => $this->repository->studentSummary(3));
+
+        $this->assertStringContainsString("select count(*) as aggregate from exams where exams.status = 'published' and not exists (select 1 from attempts where attempts.exam_id = exams.id and attempts.student_id = 3)", $this->sql($queries, 0));
+        $this->assertSame(['published', 3], $queries[0]['bindings']);
+        $this->assertStringContainsString('select count(*) as answered_count, round(avg(percentage), 2) as average_percentage, max(percentage) as best_percentage from attempts where student_id = 3', $this->sql($queries, 1));
+        $this->assertSame([3], $queries[1]['bindings']);
+    }
+
     public function test_exams_ranking_groups_exams_and_ranks_by_average(): void
     {
         $queries = $this->captureQueries(fn () => $this->repository->examsRanking(1, 1, 4));

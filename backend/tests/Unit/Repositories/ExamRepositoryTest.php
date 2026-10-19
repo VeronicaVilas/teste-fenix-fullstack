@@ -3,6 +3,7 @@
 namespace Tests\Unit\Repositories;
 
 use App\Enums\ExamStatus;
+use App\Enums\StudentExamStatus;
 use App\Http\Repositories\ExamRepository;
 use App\Models\Exam;
 use App\Models\User;
@@ -46,13 +47,26 @@ class ExamRepositoryTest extends TestCase
     {
         $student = User::factory()->student()->make(['id' => 3]);
 
-        $listQueries = $this->captureQueries(fn () => $this->repository->paginatePublishedForStudent($student, 10));
+        $listQueries = $this->captureQueries(fn () => $this->repository->paginatePublishedForStudent($student, null, null, 10));
         $findQueries = $this->captureQueries(fn () => $this->repository->findPublishedWithQuestions(10));
 
         $this->assertStringContainsString("from exams where status = 'published'", $this->sql($listQueries));
         $this->assertSame(['published'], $listQueries[0]['bindings']);
         $this->assertStringContainsString("where status = 'published' and exams.id = 10", $this->sql($findQueries));
         $this->assertSame(['published', 10], $findQueries[0]['bindings']);
+    }
+
+    public function test_student_exams_can_be_filtered_by_pending_answered_and_title(): void
+    {
+        $student = User::factory()->student()->make(['id' => 3]);
+
+        $pending = $this->captureQueries(fn () => $this->repository->paginatePublishedForStudent($student, StudentExamStatus::Pending, null, 10));
+        $answered = $this->captureQueries(fn () => $this->repository->paginatePublishedForStudent($student, StudentExamStatus::Answered, '50%_off', 10));
+
+        $this->assertStringContainsString("where status = 'published' and not exists (select * from attempts where exams.id = attempts.exam_id and student_id = 3)", $this->sql($pending));
+        $this->assertSame(['published', 3], $pending[0]['bindings']);
+        $this->assertStringContainsString('and exists (select * from attempts where exams.id = attempts.exam_id and student_id = 3) and title::text ilike', $this->sql($answered));
+        $this->assertSame(['published', 3, '%50\\%\\_off%'], $answered[0]['bindings']);
     }
 
     public function test_lock_for_update_locks_the_row(): void

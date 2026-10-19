@@ -6,6 +6,7 @@ use App\Http\Resources\AttemptResource;
 use App\Http\Resources\AttemptResultResource;
 use App\Http\Resources\AttemptSummaryResource;
 use App\Http\Resources\AvailableExamResource;
+use App\Http\Resources\StudentDashboardResource;
 use App\Http\Resources\StudentExamResource;
 use App\Models\Attempt;
 use Illuminate\Database\Eloquent\Collection;
@@ -17,6 +18,35 @@ use Tests\TestCase;
 class StudentResourcesTest extends TestCase
 {
     use BuildsExams, ResolvesResources;
+
+    public function test_student_dashboard_formats_counts_and_percentages(): void
+    {
+        $this->assertSame([
+            'answered_count' => 3,
+            'pending_count' => 5,
+            'average_percentage' => '41.67',
+            'best_percentage' => '75.00',
+        ], $this->resolveResource(new StudentDashboardResource([
+            'answered_count' => '3',
+            'pending_count' => 5,
+            'average_percentage' => '41.6666',
+            'best_percentage' => 75,
+        ])));
+    }
+
+    public function test_student_dashboard_without_attempts_keeps_percentages_null(): void
+    {
+        $data = $this->resolveResource(new StudentDashboardResource([
+            'answered_count' => 0,
+            'pending_count' => 2,
+            'average_percentage' => null,
+            'best_percentage' => null,
+        ]));
+
+        $this->assertNull($data['average_percentage']);
+        $this->assertNull($data['best_percentage']);
+        $this->assertSame(2, $data['pending_count']);
+    }
 
     public function test_student_exam_resource_never_exposes_answer_key(): void
     {

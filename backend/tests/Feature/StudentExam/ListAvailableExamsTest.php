@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\StudentExam;
 
+use App\Enums\StudentExamStatus;
 use App\Enums\UserRole;
 use App\Interfaces\ExamRepositoryInterface;
 use App\Interfaces\UserRepositoryInterface;
@@ -48,7 +49,8 @@ class ListAvailableExamsTest extends TestCase
 
         $this->mock(ExamRepositoryInterface::class, function (MockInterface $mock) use ($answered, $pending) {
             $mock->shouldReceive('paginatePublishedForStudent')->once()
-                ->withArgs(fn (User $student, int $perPage) => $student->is($this->student) && $perPage === 10)
+                ->withArgs(fn (User $student, ?StudentExamStatus $status, ?string $search, int $perPage) => $student->is($this->student)
+                    && $status === null && $search === null && $perPage === 10)
                 ->andReturn(new LengthAwarePaginator([$answered, $pending], 2, 10, 1));
         });
 
@@ -92,7 +94,7 @@ class ListAvailableExamsTest extends TestCase
     {
         $this->mock(ExamRepositoryInterface::class, function (MockInterface $mock) {
             $mock->shouldReceive('paginatePublishedForStudent')->once()
-                ->withArgs(fn (User $student, int $perPage) => $perPage === 5)
+                ->withArgs(fn (User $student, ?StudentExamStatus $status, ?string $search, int $perPage) => $perPage === 5)
                 ->andReturn(new LengthAwarePaginator([], 0, 5, 1));
         });
 
@@ -101,6 +103,44 @@ class ListAvailableExamsTest extends TestCase
         $this->getJson(self::URL.'?per_page=51')
             ->assertUnprocessable()
             ->assertJsonPath('errors.per_page.0', 'A quantidade por página deve ser no máximo 50.');
+    }
+
+    public function test_forwards_status_and_search_filters(): void
+    {
+        $this->mock(ExamRepositoryInterface::class, function (MockInterface $mock) {
+            $mock->shouldReceive('paginatePublishedForStudent')->once()
+                ->withArgs(fn (User $student, ?StudentExamStatus $status, ?string $search, int $perPage) => $status === StudentExamStatus::Pending
+                    && $search === 'Geografia' && $perPage === 4)
+                ->andReturn(new LengthAwarePaginator([], 0, 4, 1));
+        });
+
+        $this->getJson(self::URL.'?status=pending&search=%20Geografia%20&per_page=4')->assertOk();
+    }
+
+    public function test_ignores_an_empty_search(): void
+    {
+        $this->mock(ExamRepositoryInterface::class, function (MockInterface $mock) {
+            $mock->shouldReceive('paginatePublishedForStudent')->once()
+                ->withArgs(fn (User $student, ?StudentExamStatus $status, ?string $search) => $status === StudentExamStatus::Answered && $search === null)
+                ->andReturn(new LengthAwarePaginator([], 0, 10, 1));
+        });
+
+        $this->getJson(self::URL.'?status=answered&search=%20%20')->assertOk();
+    }
+
+    public function test_validates_the_filters(): void
+    {
+        $this->mock(ExamRepositoryInterface::class, function (MockInterface $mock) {
+            $mock->shouldNotReceive('paginatePublishedForStudent');
+        });
+
+        $this->getJson(self::URL.'?status=archived')
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.status.0', 'A situação deve ser pending ou answered.');
+
+        $this->getJson(self::URL.'?search='.str_repeat('a', 256))
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.search.0', 'A busca deve ter no máximo 255 caracteres.');
     }
 
     public function test_returns_404_when_user_is_not_a_student(): void

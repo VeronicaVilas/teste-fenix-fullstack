@@ -2,9 +2,10 @@
 
 namespace Tests\Unit\Http\Controllers;
 
+use App\Enums\StudentExamStatus;
 use App\Http\Controllers\AttemptController;
 use App\Http\Controllers\StudentExamController;
-use App\Http\Requests\PaginationRequest;
+use App\Http\Requests\ListAvailableExamsRequest;
 use App\Http\Requests\SubmitAttemptRequest;
 use App\Http\Services\Attempt\GetAttemptResultService;
 use App\Http\Services\Attempt\SubmitAttemptService;
@@ -44,12 +45,12 @@ class StudentFlowControllersTest extends TestCase
         $exam->setRelation('attempts', new Collection);
 
         $exams = $this->examRepository(function (MockInterface $mock) use ($exam) {
-            $mock->shouldReceive('paginatePublishedForStudent')->once()->with($this->student, 10)
+            $mock->shouldReceive('paginatePublishedForStudent')->once()->with($this->student, StudentExamStatus::Answered, 'geo', 10)
                 ->andReturn(new LengthAwarePaginator([$exam], 1, 10, 1));
         });
 
         $response = (new StudentExamController)->index(
-            $this->validatedRequest(PaginationRequest::class, [], 'GET'),
+            $this->validatedRequest(ListAvailableExamsRequest::class, ['status' => 'answered', 'search' => ' geo '], 'GET'),
             $this->student,
             new ListAvailableExamsService($exams),
         );
