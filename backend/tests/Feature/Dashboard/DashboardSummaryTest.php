@@ -25,7 +25,7 @@ class DashboardSummaryTest extends TestCase
         });
     }
 
-    public function test_returns_summary_with_best_worst_and_per_exam_average(): void
+    public function test_returns_summary_with_best_worst_and_top_student(): void
     {
         $this->mock(DashboardRepositoryInterface::class, function (MockInterface $mock) {
             $mock->shouldReceive('totals')->once()->with(1)
@@ -48,10 +48,6 @@ class DashboardSummaryTest extends TestCase
             ]);
             $mock->shouldReceive('topStudent')->once()->with(1)
                 ->andReturn(['student_name' => 'Ana Souza', 'exams_count' => 2, 'total_grade' => '18.5']);
-            $mock->shouldReceive('examStats')->once()->with(1)->andReturn([
-                ['id' => 10, 'title' => 'Prova de Geografia', 'attempts_count' => 3, 'average_percentage' => '66.67', 'best_percentage' => '100.00', 'worst_percentage' => '33.33'],
-                ['id' => 11, 'title' => 'Prova de História', 'attempts_count' => 0, 'average_percentage' => null, 'best_percentage' => null, 'worst_percentage' => null],
-            ]);
         });
 
         $this->getJson(self::URL)
@@ -80,10 +76,6 @@ class DashboardSummaryTest extends TestCase
                         'submitted_at' => '2026-10-16T11:00:00+00:00',
                     ],
                     'top_student' => ['student_name' => 'Ana Souza', 'exams_count' => 2, 'total_grade' => '18.50'],
-                    'exams' => [
-                        ['id' => 10, 'title' => 'Prova de Geografia', 'attempts_count' => 3, 'average_percentage' => '66.67', 'best_percentage' => '100.00', 'worst_percentage' => '33.33'],
-                        ['id' => 11, 'title' => 'Prova de História', 'attempts_count' => 0, 'average_percentage' => null, 'best_percentage' => null, 'worst_percentage' => null],
-                    ],
                 ],
             ]);
     }
@@ -109,7 +101,6 @@ class DashboardSummaryTest extends TestCase
             $mock->shouldReceive('bestAttempt')->once()->with(1)->andReturn(null);
             $mock->shouldReceive('worstAttempt')->once()->with(1)->andReturn(null);
             $mock->shouldReceive('topStudent')->once()->with(1)->andReturn(null);
-            $mock->shouldReceive('examStats')->once()->with(1)->andReturn([]);
         });
     }
 }

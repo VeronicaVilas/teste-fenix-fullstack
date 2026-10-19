@@ -187,7 +187,7 @@
                     "Dashboard"
                 ],
                 "summary": "Resumo de desempenho dos alunos",
-                "description": "Média, melhor (Top 1) e pior pontuação, totais e média por prova. Calculado no banco e guardado no Redis por 10 minutos, invalidado a cada nova tentativa, publicação ou exclusão.",
+                "description": "Média da turma, melhor e pior tentativa, Top 1 e totais. Calculado no banco e guardado no Redis por 10 minutos, invalidado a cada nova tentativa, publicação ou exclusão.",
                 "operationId": "dashboardSummary",
                 "parameters": [
                     {
@@ -226,6 +226,89 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/teachers/{teacher}/dashboard/exam-averages": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Média de cada prova publicada, paginada",
+                "description": "Todas as provas publicadas do professor, inclusive sem tentativas (média nula), da publicação mais recente para a mais antiga. Aceita busca pelo título. Cada página fica no Redis por 10 minutos.",
+                "operationId": "dashboardExamAverages",
+                "parameters": [
+                    {
+                        "name": "teacher",
+                        "in": "path",
+                        "description": "Id do professor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Busca no título, sem diferenciar maiúsculas",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 255
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 50,
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Médias das provas carregadas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Médias das provas carregadas com sucesso."
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/PaginatedExamAverages"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
                     }
                 }
             }
@@ -1748,8 +1831,7 @@
                     "total_students",
                     "average_percentage",
                     "best",
-                    "worst",
-                    "exams"
+                    "worst"
                 ],
                 "properties": {
                     "total_attempts": {
@@ -1811,42 +1893,6 @@
                         },
                         "type": "object",
                         "nullable": true
-                    },
-                    "exams": {
-                        "description": "Todas as provas publicadas do professor, com a média de cada uma.",
-                        "type": "array",
-                        "items": {
-                            "properties": {
-                                "id": {
-                                    "type": "integer",
-                                    "example": 3
-                                },
-                                "title": {
-                                    "type": "string",
-                                    "example": "Prova de Geografia"
-                                },
-                                "attempts_count": {
-                                    "type": "integer",
-                                    "example": 6
-                                },
-                                "average_percentage": {
-                                    "type": "string",
-                                    "example": "76.67",
-                                    "nullable": true
-                                },
-                                "best_percentage": {
-                                    "type": "string",
-                                    "example": "100.00",
-                                    "nullable": true
-                                },
-                                "worst_percentage": {
-                                    "type": "string",
-                                    "example": "40.00",
-                                    "nullable": true
-                                }
-                            },
-                            "type": "object"
-                        }
                     }
                 },
                 "type": "object"
@@ -1898,6 +1944,53 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/ExamRankingItem"
+                        }
+                    },
+                    "meta": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                    }
+                },
+                "type": "object"
+            },
+            "ExamAverageItem": {
+                "required": [
+                    "id",
+                    "title",
+                    "attempts_count",
+                    "average_percentage"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 6
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Prova de Geografia"
+                    },
+                    "attempts_count": {
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "average_percentage": {
+                        "description": "Nula quando a prova ainda não tem tentativas",
+                        "type": "string",
+                        "example": "62.50",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatedExamAverages": {
+                "required": [
+                    "items",
+                    "meta"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExamAverageItem"
                         }
                     },
                     "meta": {

@@ -17,10 +17,7 @@ interface DashboardRepositoryInterface
 
     public function topStudent(int $teacherId): ?array;
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    public function examStats(int $teacherId): array;
+    public function examAverages(int $teacherId, ?string $search, int $page, int $perPage): LengthAwarePaginator;
 
     public function examsRanking(int $teacherId, int $page, int $perPage): LengthAwarePaginator;
 

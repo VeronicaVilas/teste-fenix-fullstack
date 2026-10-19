@@ -293,7 +293,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Schema(
     schema: 'DashboardSummary',
-    required: ['total_attempts', 'total_students', 'average_percentage', 'best', 'worst', 'exams'],
+    required: ['total_attempts', 'total_students', 'average_percentage', 'best', 'worst'],
     properties: [
         new OA\Property(property: 'total_attempts', type: 'integer', example: 12),
         new OA\Property(property: 'total_students', type: 'integer', example: 6),
@@ -310,21 +310,6 @@ use OpenApi\Attributes as OA;
             ],
             type: 'object',
             nullable: true
-        ),
-        new OA\Property(
-            property: 'exams',
-            description: 'Todas as provas publicadas do professor, com a média de cada uma.',
-            type: 'array',
-            items: new OA\Items(
-                properties: [
-                    new OA\Property(property: 'id', type: 'integer', example: 3),
-                    new OA\Property(property: 'title', type: 'string', example: 'Prova de Geografia'),
-                    new OA\Property(property: 'attempts_count', type: 'integer', example: 6),
-                    new OA\Property(property: 'average_percentage', type: 'string', nullable: true, example: '76.67'),
-                    new OA\Property(property: 'best_percentage', type: 'string', nullable: true, example: '100.00'),
-                    new OA\Property(property: 'worst_percentage', type: 'string', nullable: true, example: '40.00'),
-                ]
-            )
         ),
     ]
 )]
@@ -345,6 +330,24 @@ use OpenApi\Attributes as OA;
     required: ['items', 'meta'],
     properties: [
         new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/ExamRankingItem')),
+        new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'ExamAverageItem',
+    required: ['id', 'title', 'attempts_count', 'average_percentage'],
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 6),
+        new OA\Property(property: 'title', type: 'string', example: 'Prova de Geografia'),
+        new OA\Property(property: 'attempts_count', type: 'integer', example: 4),
+        new OA\Property(property: 'average_percentage', description: 'Nula quando a prova ainda não tem tentativas', type: 'string', nullable: true, example: '62.50'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'PaginatedExamAverages',
+    required: ['items', 'meta'],
+    properties: [
+        new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/ExamAverageItem')),
         new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
     ]
 )]

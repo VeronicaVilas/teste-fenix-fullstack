@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PaginationRequest;
+use App\Http\Requests\SearchPaginationRequest;
 use App\Http\Resources\DashboardSummaryResource;
+use App\Http\Resources\ExamAverageItemResource;
 use App\Http\Resources\ExamRankingItemResource;
+use App\Http\Services\Dashboard\GetDashboardExamAveragesService;
 use App\Http\Services\Dashboard\GetDashboardExamsRankingService;
 use App\Http\Services\Dashboard\GetDashboardSummaryService;
 use App\Models\User;
@@ -22,6 +25,15 @@ class DashboardController extends Controller
             'Dashboard carregado com sucesso.',
             Response::HTTP_OK,
             new DashboardSummaryResource($service->handle($teacher)),
+        );
+    }
+
+    public function examAverages(SearchPaginationRequest $request, User $teacher, GetDashboardExamAveragesService $service): JsonResponse
+    {
+        return $this->paginated(
+            'Médias das provas carregadas com sucesso.',
+            $service->handle($teacher, $request->search(), $request->page(), $request->perPage()),
+            ExamAverageItemResource::class,
         );
     }
 

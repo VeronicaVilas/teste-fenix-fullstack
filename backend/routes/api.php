@@ -20,6 +20,7 @@ Route::prefix('teachers/{teacher}')->group(function () {
     Route::delete('exams/{exam}', [ExamController::class, 'destroy'])->whereNumber('exam');
     Route::patch('exams/{exam}/publish', [ExamController::class, 'publish'])->whereNumber('exam');
     Route::get('dashboard', [DashboardController::class, 'summary']);
+    Route::get('dashboard/exam-averages', [DashboardController::class, 'examAverages']);
     Route::get('dashboard/exams-ranking', [DashboardController::class, 'examsRanking']);
 });
 

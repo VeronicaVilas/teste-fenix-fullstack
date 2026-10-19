@@ -4,6 +4,8 @@ namespace Tests\Unit\Http\Controllers;
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Requests\PaginationRequest;
+use App\Http\Requests\SearchPaginationRequest;
+use App\Http\Services\Dashboard\GetDashboardExamAveragesService;
 use App\Http\Services\Dashboard\GetDashboardExamsRankingService;
 use App\Http\Services\Dashboard\GetDashboardSummaryService;
 use App\Interfaces\DashboardRepositoryInterface;
@@ -36,7 +38,6 @@ class DashboardControllerTest extends TestCase
             $mock->shouldReceive('bestAttempt')->once()->andReturn(null);
             $mock->shouldReceive('worstAttempt')->once()->andReturn(null);
             $mock->shouldReceive('topStudent')->once()->andReturn(null);
-            $mock->shouldReceive('examStats')->once()->with(1)->andReturn([]);
         });
 
         $response = (new DashboardController)->summary($this->teacher, new GetDashboardSummaryService($dashboard));
@@ -68,5 +69,28 @@ class DashboardControllerTest extends TestCase
         $this->assertSame('Ranking das provas carregado com sucesso.', $data['message']);
         $this->assertSame('Ana Souza', $data['data']['items'][0]['best_student_name']);
         $this->assertSame(['current_page' => 1, 'last_page' => 1, 'per_page' => 4, 'total' => 1], $data['data']['meta']);
+    }
+
+    public function test_exam_averages_returns_paginated_exams(): void
+    {
+        $dashboard = Mockery::mock(DashboardRepositoryInterface::class, function (MockInterface $mock) {
+            $mock->shouldReceive('examAverages')->once()->with(1, 'geo', 2, 4)->andReturn(new LengthAwarePaginator([[
+                'id' => '6',
+                'title' => 'Prova de Geografia',
+                'attempts_count' => '4',
+                'average_percentage' => '62.5',
+            ]], 5, 4, 2));
+        });
+
+        $response = (new DashboardController)->examAverages(
+            $this->validatedRequest(SearchPaginationRequest::class, ['search' => ' geo ', 'page' => 2, 'per_page' => 4], 'GET'),
+            $this->teacher,
+            new GetDashboardExamAveragesService($dashboard),
+        );
+
+        $data = $response->getData(true);
+        $this->assertSame('Médias das provas carregadas com sucesso.', $data['message']);
+        $this->assertSame([['id' => 6, 'title' => 'Prova de Geografia', 'attempts_count' => 4, 'average_percentage' => '62.50']], $data['data']['items']);
+        $this->assertSame(['current_page' => 2, 'last_page' => 2, 'per_page' => 4, 'total' => 5], $data['data']['meta']);
     }
 }

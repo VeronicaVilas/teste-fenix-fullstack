@@ -39,14 +39,23 @@ class DashboardRepositoryTest extends TestCase
         $this->assertStringContainsString('group by users.id, users.name order by total_grade desc, users.name asc limit 1', $sql);
     }
 
-    public function test_exam_stats_include_only_published_exams_of_the_teacher(): void
+    public function test_exam_averages_include_published_exams_without_attempts(): void
     {
-        $queries = $this->captureQueries(fn () => $this->repository->examStats(1));
+        $queries = $this->captureQueries(fn () => $this->repository->examAverages(1, null, 2, 4));
         $sql = $this->sql($queries);
 
         $this->assertStringContainsString('from exams left join attempts on attempts.exam_id = exams.id', $sql);
         $this->assertStringContainsString("where exams.teacher_id = 1 and exams.status = 'published'", $sql);
+        $this->assertStringContainsString('group by exams.id, exams.title, exams.published_at', $sql);
         $this->assertSame([1, 'published'], $queries[0]['bindings']);
+    }
+
+    public function test_exam_averages_search_the_title_without_wildcards(): void
+    {
+        $queries = $this->captureQueries(fn () => $this->repository->examAverages(1, '50%', 1, 4));
+
+        $this->assertStringContainsString('and exams.title::text ilike', $this->sql($queries));
+        $this->assertSame([1, 'published', '%50\\%%'], $queries[0]['bindings']);
     }
 
     public function test_student_summary_counts_pending_exams_and_aggregates_attempts(): void

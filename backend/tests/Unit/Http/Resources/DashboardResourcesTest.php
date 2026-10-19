@@ -3,6 +3,7 @@
 namespace Tests\Unit\Http\Resources;
 
 use App\Http\Resources\DashboardSummaryResource;
+use App\Http\Resources\ExamAverageItemResource;
 use App\Http\Resources\ExamRankingItemResource;
 use Tests\Concerns\ResolvesResources;
 use Tests\TestCase;
@@ -18,9 +19,6 @@ class DashboardResourcesTest extends TestCase
             'best' => $this->attempt('Ana Souza', 3, '100'),
             'worst' => $this->attempt('Bruno Lima', 1, 33.333),
             'top_student' => ['student_name' => 'Ana Souza', 'exams_count' => '2', 'total_grade' => 18.5],
-            'exams' => [
-                ['id' => '10', 'title' => 'Prova de Geografia', 'attempts_count' => '3', 'average_percentage' => 66.67, 'best_percentage' => '100.00', 'worst_percentage' => '33.33'],
-            ],
         ]));
 
         $this->assertSame([
@@ -44,9 +42,6 @@ class DashboardResourcesTest extends TestCase
                 'submitted_at' => '2026-10-16T10:00:00+00:00',
             ],
             'top_student' => ['student_name' => 'Ana Souza', 'exams_count' => 2, 'total_grade' => '18.50'],
-            'exams' => [
-                ['id' => 10, 'title' => 'Prova de Geografia', 'attempts_count' => 3, 'average_percentage' => '66.67', 'best_percentage' => '100.00', 'worst_percentage' => '33.33'],
-            ],
         ], $data);
     }
 
@@ -57,16 +52,12 @@ class DashboardResourcesTest extends TestCase
             'best' => null,
             'worst' => null,
             'top_student' => null,
-            'exams' => [
-                ['id' => 11, 'title' => 'Prova de História', 'attempts_count' => 0, 'average_percentage' => null, 'best_percentage' => null, 'worst_percentage' => null],
-            ],
         ]));
 
         $this->assertNull($data['average_percentage']);
         $this->assertNull($data['best']);
         $this->assertNull($data['worst']);
         $this->assertNull($data['top_student']);
-        $this->assertNull($data['exams'][0]['average_percentage']);
     }
 
     private function attempt(string $student, int $score, float|string $percentage): array
@@ -79,6 +70,17 @@ class DashboardResourcesTest extends TestCase
             'percentage' => $percentage,
             'submitted_at' => '2026-10-16 10:00:00',
         ];
+    }
+
+    public function test_exam_average_item_casts_database_values(): void
+    {
+        $this->assertSame(
+            ['id' => 6, 'title' => 'Prova de Geografia', 'attempts_count' => 4, 'average_percentage' => '62.50'],
+            $this->resolveResource(new ExamAverageItemResource(['id' => '6', 'title' => 'Prova de Geografia', 'attempts_count' => '4', 'average_percentage' => '62.5'])),
+        );
+        $this->assertNull(
+            $this->resolveResource(new ExamAverageItemResource(['id' => 7, 'title' => 'Prova nova', 'attempts_count' => 0, 'average_percentage' => null]))['average_percentage'],
+        );
     }
 
     public function test_exam_ranking_item_casts_database_values(): void

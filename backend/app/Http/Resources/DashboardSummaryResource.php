@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Carbon;
 
 /**
- * @property array{exam_id: ?int, totals: array, best: ?array, worst: ?array, top_student: ?array, exams: array} $resource
+ * @property array{totals: array, best: ?array, worst: ?array, top_student: ?array} $resource
  */
 class DashboardSummaryResource extends JsonResource
 {
@@ -22,14 +22,6 @@ class DashboardSummaryResource extends JsonResource
             'best' => self::attempt($summary['best']),
             'worst' => self::attempt($summary['worst']),
             'top_student' => self::topStudent($summary['top_student']),
-            'exams' => array_map(fn (array $exam) => [
-                'id' => (int) $exam['id'],
-                'title' => $exam['title'],
-                'attempts_count' => (int) $exam['attempts_count'],
-                'average_percentage' => self::percentage($exam['average_percentage']),
-                'best_percentage' => self::percentage($exam['best_percentage']),
-                'worst_percentage' => self::percentage($exam['worst_percentage']),
-            ], $summary['exams']),
         ];
     }
 

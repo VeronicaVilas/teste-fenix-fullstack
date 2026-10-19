@@ -68,22 +68,21 @@ class DashboardRepository implements DashboardRepositoryInterface
         return $student ? (array) $student : null;
     }
 
-    public function examStats(int $teacherId): array
+    public function examAverages(int $teacherId, ?string $search, int $page, int $perPage): LengthAwarePaginator
     {
         return DB::table('exams')
             ->leftJoin('attempts', 'attempts.exam_id', '=', 'exams.id')
             ->where('exams.teacher_id', $teacherId)
             ->where('exams.status', ExamStatus::Published->value)
+            ->when($search, fn (Builder $query) => $query->whereLike('exams.title', '%'.addcslashes($search, '%_\\').'%'))
             ->groupBy('exams.id', 'exams.title', 'exams.published_at')
-            ->orderByDesc('exams.published_at')
             ->select('exams.id', 'exams.title')
             ->selectRaw('COUNT(attempts.id) as attempts_count')
             ->selectRaw('ROUND(AVG(attempts.percentage), 2) as average_percentage')
-            ->selectRaw('MAX(attempts.percentage) as best_percentage')
-            ->selectRaw('MIN(attempts.percentage) as worst_percentage')
-            ->get()
-            ->map(fn (object $row) => (array) $row)
-            ->all();
+            ->orderByDesc('exams.published_at')
+            ->orderByDesc('exams.id')
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->through(fn (object $row) => (array) $row);
     }
 
     public function examsRanking(int $teacherId, int $page, int $perPage): LengthAwarePaginator
