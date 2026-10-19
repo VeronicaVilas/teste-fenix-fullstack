@@ -1,11 +1,11 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Eye, Play } from 'lucide-vue-next'
 
 import AlertMessage from '@/components/AlertMessage.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
-import { listAllAvailableExams } from '@/services/studentExamService'
+import { listAvailableExams } from '@/services/studentExamService'
 import { useSessionStore } from '@/stores/session'
 
 const PER_PAGE = 10
@@ -20,37 +20,18 @@ const filters = [
 
 const status = ref(null)
 const exams = ref([])
-const currentPage = ref(1)
+const meta = ref({ current_page: 1, last_page: 1, per_page: PER_PAGE, total: 0 })
 const loading = ref(false)
 const error = ref('')
 
-const filteredExams = computed(() => {
-  if (status.value === null) {
-    return exams.value
-  }
-
-  return exams.value.filter((exam) => exam.answered === (status.value === 'answered'))
-})
-
-const meta = computed(() => ({
-  current_page: currentPage.value,
-  last_page: Math.max(1, Math.ceil(filteredExams.value.length / PER_PAGE)),
-  per_page: PER_PAGE,
-  total: filteredExams.value.length,
-}))
-
-const visibleExams = computed(() => {
-  const start = (currentPage.value - 1) * PER_PAGE
-
-  return filteredExams.value.slice(start, start + PER_PAGE)
-})
-
-async function load() {
+async function load(page = 1) {
   loading.value = true
   error.value = ''
 
   try {
-    exams.value = await listAllAvailableExams(session.userId)
+    const data = await listAvailableExams(session.userId, { page, perPage: PER_PAGE, status: status.value })
+    exams.value = data.items
+    meta.value = data.meta
   } catch (failure) {
     error.value = failure.message
   } finally {
@@ -62,11 +43,9 @@ function formatGrade(percentage) {
   return (Number(percentage) / 10).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 }
 
-watch(status, () => {
-  currentPage.value = 1
-})
+watch(status, () => load(1))
 
-onMounted(load)
+onMounted(() => load())
 </script>
 
 <template>
@@ -93,12 +72,12 @@ onMounted(load)
 
       <p v-if="loading" class="student-exams__state">Carregando provas...</p>
 
-      <p v-else-if="!error && filteredExams.length === 0" class="student-exams__state">
+      <p v-else-if="!error && exams.length === 0" class="student-exams__state">
         <template v-if="status">Nenhuma prova nesta situação.</template>
         <template v-else>Nenhuma prova disponível no momento.</template>
       </p>
 
-      <div v-else-if="filteredExams.length > 0" class="table-wrapper">
+      <div v-else-if="exams.length > 0" class="table-wrapper">
         <table>
           <thead>
             <tr>
@@ -110,7 +89,7 @@ onMounted(load)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="exam in visibleExams" :key="exam.id">
+            <tr v-for="exam in exams" :key="exam.id">
               <td class="student-exams__title">{{ exam.title }}</td>
               <td>{{ exam.questions_count }}</td>
               <td>
@@ -151,7 +130,7 @@ onMounted(load)
         </table>
       </div>
 
-      <PaginationBar :meta="meta" :disabled="loading" @change="currentPage = $event" />
+      <PaginationBar :meta="meta" :disabled="loading" @change="load" />
     </div>
   </section>
 </template>

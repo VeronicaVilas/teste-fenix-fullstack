@@ -1,40 +1,62 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ArrowRight, ClipboardList, Play, Search } from 'lucide-vue-next'
 
-const props = defineProps({
-  exams: { type: Array, required: true },
-})
+import { listAvailableExams } from '@/services/studentExamService'
+import { useSessionStore } from '@/stores/session'
 
 const PER_PAGE = 4
+const SEARCH_DELAY = 300
+
+const session = useSessionStore()
 
 const search = ref('')
-const currentPage = ref(1)
+const exams = ref([])
+const meta = ref({ current_page: 1, last_page: 1, per_page: PER_PAGE, total: 0 })
+const loading = ref(false)
+const loaded = ref(false)
+const error = ref('')
 
-const filteredExams = computed(() => {
-  const term = search.value.trim().toLowerCase()
+let searchTimer = null
 
-  return props.exams.filter((exam) => exam.title.toLowerCase().includes(term))
-})
+const pages = computed(() => Array.from({ length: meta.value.last_page }, (_, index) => index + 1))
 
-const lastPage = computed(() => Math.max(1, Math.ceil(filteredExams.value.length / PER_PAGE)))
+const searching = computed(() => search.value.trim() !== '')
 
-const pages = computed(() => Array.from({ length: lastPage.value }, (_, index) => index + 1))
+async function load(page = 1) {
+  loading.value = true
+  error.value = ''
 
-const visibleExams = computed(() => {
-  const start = (currentPage.value - 1) * PER_PAGE
-
-  return filteredExams.value.slice(start, start + PER_PAGE)
-})
-
-watch(search, () => {
-  currentPage.value = 1
-})
+  try {
+    const data = await listAvailableExams(session.userId, {
+      page,
+      perPage: PER_PAGE,
+      status: 'pending',
+      search: search.value,
+    })
+    exams.value = data.items
+    meta.value = data.meta
+    loaded.value = true
+  } catch (failure) {
+    error.value = failure.message
+  } finally {
+    loading.value = false
+  }
+}
 
 function questionsLabel(count) {
   return `${count} ${count === 1 ? 'questão' : 'questões'}`
 }
+
+watch(search, () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => load(1), SEARCH_DELAY)
+})
+
+onMounted(() => load())
+
+onBeforeUnmount(() => clearTimeout(searchTimer))
 </script>
 
 <template>
@@ -55,12 +77,16 @@ function questionsLabel(count) {
       <input v-model="search" type="search" placeholder="Buscar prova..." aria-label="Buscar prova" />
     </label>
 
-    <p v-if="exams.length === 0" class="panel__empty">Nenhuma prova para fazer no momento.</p>
+    <p v-if="error" class="panel__empty panel__empty--error">{{ error }}</p>
 
-    <p v-else-if="visibleExams.length === 0" class="panel__empty">Nenhuma prova encontrada.</p>
+    <p v-else-if="!loaded" class="panel__empty">Carregando provas...</p>
 
-    <ul v-else class="exams">
-      <li v-for="(exam, index) in visibleExams" :key="exam.id" class="exam">
+    <p v-else-if="exams.length === 0" class="panel__empty">
+      {{ searching ? 'Nenhuma prova encontrada.' : 'Nenhuma prova para fazer no momento.' }}
+    </p>
+
+    <ul v-else class="exams" :class="{ 'exams--loading': loading }">
+      <li v-for="(exam, index) in exams" :key="exam.id" class="exam">
         <span class="exam__icon" :class="`exam__icon--${index % 4}`">
           <ClipboardList aria-hidden="true" />
         </span>
@@ -75,14 +101,15 @@ function questionsLabel(count) {
       </li>
     </ul>
 
-    <nav v-if="lastPage > 1" class="pagination" aria-label="Páginas das provas">
+    <nav v-if="meta.last_page > 1" class="pagination" aria-label="Páginas das provas">
       <button
         v-for="page in pages"
         :key="page"
         type="button"
-        :class="{ active: page === currentPage }"
-        :aria-current="page === currentPage ? 'page' : undefined"
-        @click="currentPage = page"
+        :class="{ active: page === meta.current_page }"
+        :aria-current="page === meta.current_page ? 'page' : undefined"
+        :disabled="loading"
+        @click="page !== meta.current_page && load(page)"
       >
         {{ page }}
       </button>
@@ -176,6 +203,10 @@ function questionsLabel(count) {
   color: var(--color-muted);
 }
 
+.panel__empty--error {
+  color: var(--color-danger);
+}
+
 .exams {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -183,6 +214,11 @@ function questionsLabel(count) {
   margin: 0;
   padding: 0;
   list-style: none;
+  transition: opacity 0.2s ease;
+}
+
+.exams--loading {
+  opacity: 0.5;
 }
 
 .exam {

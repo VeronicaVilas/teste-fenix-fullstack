@@ -5,23 +5,13 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import StudentDashboardView from '../StudentDashboardView.vue'
 import { routes } from '@/router'
-import { listAllAvailableExams } from '@/services/studentExamService'
+import { getStudentDashboard, listAvailableExams } from '@/services/studentExamService'
 import { ROLES, useSessionStore } from '@/stores/session'
 
-vi.mock('@/services/studentExamService', () => ({ listAllAvailableExams: vi.fn() }))
+vi.mock('@/services/studentExamService', () => ({ getStudentDashboard: vi.fn(), listAvailableExams: vi.fn() }))
 
-function answered(id, percentage) {
-  return {
-    id,
-    title: `Prova ${id}`,
-    questions_count: 10,
-    answered: true,
-    attempt: { score: percentage / 10, total_questions: 10, percentage: percentage.toFixed(2) },
-  }
-}
-
-function pending(id) {
-  return { id, title: `Pendente ${id}`, questions_count: 5, answered: false, attempt: null }
+function summary(overrides = {}) {
+  return { answered_count: 2, pending_count: 1, average_percentage: '65.00', best_percentage: '80.00', ...overrides }
 }
 
 async function mountDashboard() {
@@ -44,14 +34,15 @@ describe('StudentDashboardView', () => {
     setActivePinia(createPinia())
     useSessionStore().enterAs(ROLES.STUDENT, { id: 3, name: 'Ana Souza' })
     vi.clearAllMocks()
+    listAvailableExams.mockResolvedValue({ items: [], meta: { current_page: 1, last_page: 1, per_page: 4, total: 0 } })
   })
 
-  it('shows the student counters', async () => {
-    listAllAvailableExams.mockResolvedValue([answered(1, 80), answered(2, 50), pending(3)])
+  it('shows the counters calculated by the API', async () => {
+    getStudentDashboard.mockResolvedValue(summary())
 
     const wrapper = await mountDashboard()
 
-    expect(listAllAvailableExams).toHaveBeenCalledWith(3)
+    expect(getStudentDashboard).toHaveBeenCalledWith(3)
     expect(statValues(wrapper)).toEqual([
       ['Provas realizadas', '2'],
       ['Média de acertos', '65,0%'],
@@ -60,7 +51,7 @@ describe('StudentDashboardView', () => {
   })
 
   it('shows dashes when no exam was answered', async () => {
-    listAllAvailableExams.mockResolvedValue([pending(3)])
+    getStudentDashboard.mockResolvedValue(summary({ answered_count: 0, average_percentage: null, best_percentage: null }))
 
     expect(statValues(await mountDashboard())).toEqual([
       ['Provas realizadas', '0'],
@@ -69,17 +60,17 @@ describe('StudentDashboardView', () => {
     ])
   })
 
-  it('lists only the pending exams with a start button', async () => {
-    listAllAvailableExams.mockResolvedValue([answered(1, 80), pending(3), pending(4)])
+  it('shows the pending exams panel', async () => {
+    getStudentDashboard.mockResolvedValue(summary())
 
-    const rows = (await mountDashboard()).findAll('.exam')
+    const wrapper = await mountDashboard()
 
-    expect(rows.map((row) => row.find('strong').text())).toEqual(['Pendente 3', 'Pendente 4'])
-    expect(rows[0].find('.exam__start').attributes('href')).toBe('/student/exams/3')
+    expect(wrapper.find('.panel h2').text()).toBe('Provas disponíveis')
+    expect(listAvailableExams).toHaveBeenCalledWith(3, expect.objectContaining({ status: 'pending' }))
   })
 
   it('shows the API error', async () => {
-    listAllAvailableExams.mockRejectedValue({ status: 0, message: 'Não foi possível conectar ao servidor.', errors: {} })
+    getStudentDashboard.mockRejectedValue({ status: 0, message: 'Não foi possível conectar ao servidor.', errors: {} })
 
     const wrapper = await mountDashboard()
 

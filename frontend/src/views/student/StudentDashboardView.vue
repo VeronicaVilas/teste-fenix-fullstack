@@ -4,40 +4,38 @@ import { ClipboardCheck, Percent, Trophy } from 'lucide-vue-next'
 
 import AlertMessage from '@/components/AlertMessage.vue'
 import AvailableExamsPanel from '@/components/AvailableExamsPanel.vue'
-import { listAllAvailableExams } from '@/services/studentExamService'
+import { getStudentDashboard } from '@/services/studentExamService'
 import { useSessionStore } from '@/stores/session'
 
 const session = useSessionStore()
 
-const exams = ref([])
-const loaded = ref(false)
+const summary = ref(null)
 const loading = ref(false)
 const error = ref('')
 
-const answeredExams = computed(() => exams.value.filter((exam) => exam.answered))
-const pendingExams = computed(() => exams.value.filter((exam) => !exam.answered))
-const percentages = computed(() => answeredExams.value.map((exam) => Number(exam.attempt.percentage)))
+const averagePercentage = computed(() => toNumber(summary.value?.average_percentage))
 
-const averagePercentage = computed(() =>
-  percentages.value.length === 0
-    ? null
-    : percentages.value.reduce((sum, value) => sum + value, 0) / percentages.value.length,
-)
+const bestGrade = computed(() => {
+  const best = toNumber(summary.value?.best_percentage)
 
-const bestGrade = computed(() => (percentages.value.length === 0 ? null : Math.max(...percentages.value) / 10))
+  return best === null ? null : best / 10
+})
 
 async function load() {
   loading.value = true
   error.value = ''
 
   try {
-    exams.value = await listAllAvailableExams(session.userId)
-    loaded.value = true
+    summary.value = await getStudentDashboard(session.userId)
   } catch (failure) {
     error.value = failure.message
   } finally {
     loading.value = false
   }
+}
+
+function toNumber(value) {
+  return value === null || value === undefined ? null : Number(value)
 }
 
 function formatNumber(value, suffix = '') {
@@ -58,15 +56,15 @@ onMounted(load)
 
     <AlertMessage :message="error" />
 
-    <p v-if="loading && !loaded" class="dashboard__state">Carregando dashboard...</p>
+    <p v-if="loading && !summary" class="dashboard__state">Carregando dashboard...</p>
 
-    <div v-else-if="loaded" class="content">
+    <div v-else-if="summary" class="content">
       <div class="stats">
         <article class="stat stat--done">
           <span class="stat__icon"><ClipboardCheck aria-hidden="true" /></span>
           <div class="stat__body">
             <h2>Provas realizadas</h2>
-            <p class="stat__value">{{ answeredExams.length }}</p>
+            <p class="stat__value">{{ summary.answered_count }}</p>
           </div>
         </article>
 
@@ -87,7 +85,7 @@ onMounted(load)
         </article>
       </div>
 
-      <AvailableExamsPanel :exams="pendingExams" />
+      <AvailableExamsPanel />
     </div>
   </section>
 </template>

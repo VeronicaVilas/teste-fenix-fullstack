@@ -1,20 +1,22 @@
 import api from './api'
 
-const MAX_PER_PAGE = 50
-
-export function listAvailableExams(studentId, page = 1, perPage = 10) {
-  return api.get(`/students/${studentId}/exams`, { params: { page, per_page: perPage } })
+export function getStudentDashboard(studentId) {
+  return api.get(`/students/${studentId}/dashboard`)
 }
 
-export async function listAllAvailableExams(studentId) {
-  const first = await listAvailableExams(studentId, 1, MAX_PER_PAGE)
-  const remaining = await Promise.all(
-    Array.from({ length: first.meta.last_page - 1 }, (_, index) =>
-      listAvailableExams(studentId, index + 2, MAX_PER_PAGE),
-    ),
-  )
+export function listAvailableExams(studentId, { page = 1, perPage = 10, status = null, search = '' } = {}) {
+  const params = { page, per_page: perPage }
+  const term = search.trim()
 
-  return [first, ...remaining].flatMap((page) => page.items)
+  if (status) {
+    params.status = status
+  }
+
+  if (term) {
+    params.search = term
+  }
+
+  return api.get(`/students/${studentId}/exams`, { params })
 }
 
 export function getAvailableExam(studentId, examId) {

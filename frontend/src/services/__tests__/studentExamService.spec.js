@@ -1,43 +1,45 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import api from '../api'
-import { listAllAvailableExams, listAvailableExams, submitAttempt } from '../studentExamService'
+import { getStudentDashboard, listAvailableExams, submitAttempt } from '../studentExamService'
 
 vi.mock('../api', () => ({ default: { get: vi.fn(), post: vi.fn() } }))
-
-function page(items, currentPage, lastPage) {
-  return { items, meta: { current_page: currentPage, last_page: lastPage, per_page: 50, total: items.length } }
-}
 
 describe('studentExamService', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('lists a page of available exams', async () => {
-    api.get.mockResolvedValue(page([], 1, 1))
+  it('loads the student dashboard', async () => {
+    api.get.mockResolvedValue({ answered_count: 1 })
 
-    await listAvailableExams(3, 2)
+    await getStudentDashboard(3)
 
-    expect(api.get).toHaveBeenCalledWith('/students/3/exams', { params: { page: 2, per_page: 10 } })
+    expect(api.get).toHaveBeenCalledWith('/students/3/dashboard')
   })
 
-  it('loads every page of available exams', async () => {
-    api.get
-      .mockResolvedValueOnce(page([{ id: 1 }], 1, 3))
-      .mockResolvedValueOnce(page([{ id: 2 }], 2, 3))
-      .mockResolvedValueOnce(page([{ id: 3 }], 3, 3))
+  it('lists a page of available exams without filters by default', async () => {
+    api.get.mockResolvedValue({ items: [], meta: {} })
 
-    const exams = await listAllAvailableExams(3)
+    await listAvailableExams(3)
 
-    expect(exams.map((exam) => exam.id)).toEqual([1, 2, 3])
-    expect(api.get).toHaveBeenNthCalledWith(1, '/students/3/exams', { params: { page: 1, per_page: 50 } })
-    expect(api.get).toHaveBeenNthCalledWith(3, '/students/3/exams', { params: { page: 3, per_page: 50 } })
+    expect(api.get).toHaveBeenCalledWith('/students/3/exams', { params: { page: 1, per_page: 10 } })
   })
 
-  it('makes a single request when everything fits in one page', async () => {
-    api.get.mockResolvedValue(page([{ id: 1 }], 1, 1))
+  it('sends the status and the trimmed search when given', async () => {
+    api.get.mockResolvedValue({ items: [], meta: {} })
 
-    expect(await listAllAvailableExams(3)).toEqual([{ id: 1 }])
-    expect(api.get).toHaveBeenCalledTimes(1)
+    await listAvailableExams(3, { page: 2, perPage: 4, status: 'pending', search: '  geo ' })
+
+    expect(api.get).toHaveBeenCalledWith('/students/3/exams', {
+      params: { page: 2, per_page: 4, status: 'pending', search: 'geo' },
+    })
+  })
+
+  it('ignores a blank search', async () => {
+    api.get.mockResolvedValue({ items: [], meta: {} })
+
+    await listAvailableExams(3, { search: '   ' })
+
+    expect(api.get).toHaveBeenCalledWith('/students/3/exams', { params: { page: 1, per_page: 10 } })
   })
 
   it('converts the answers map into the API payload', async () => {
